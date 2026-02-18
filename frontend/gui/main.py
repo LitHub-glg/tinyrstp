@@ -59,13 +59,13 @@ class NetworkGUI:
         button_spacing = 0.08
 
         controls = [
-            ('toggle_link', '切换链路状态', '#ffaa44'),
-            ('fail_node', '节点故障', '#ff4444'),
-            ('recover_node', '节点恢复', '#44ff44'),
-            ('reset', '重置拓扑', '#4488ff'),
-            ('scenario1', '场景1:链路故障', '#ff8844'),
-            ('scenario2', '场景2:链路恢复', '#88ff44'),
-            ('scenario3', '场景3:节点故障', '#ff4488'),
+            ('toggle_link', 'Toggle Link State', '#ffaa44'),
+            ('fail_node', 'Node Failure', '#ff4444'),
+            ('recover_node', 'Node Recovery', '#44ff44'),
+            ('reset', 'Reset Topology', '#4488ff'),
+            ('scenario1', 'Scenario 1: Link Failure', '#ff8844'),
+            ('scenario2', 'Scenario 2: Link Recovery', '#88ff44'),
+            ('scenario3', 'Scenario 3: Node Failure', '#ff4488'),
         ]
 
         for btn_id, label, color in controls:
@@ -215,7 +215,7 @@ class NetworkGUI:
             G.add_node(node_id)
             node_name = node_data.get('node_name', '')
             state = "✓" if node_data.get('state') == 'ACTIVE' else "✗"
-            root = " (根)" if node_data.get('is_root') else ""
+            root = " (Root)" if node_data.get('is_root') else ""
             node_labels[node_id] = f"{node_name}\n{state}{root}"
             node_colors.append(self._get_node_color(node_data))
             node_sizes.append(4500 if self.selected_node == node_id else 3500)
@@ -248,20 +248,20 @@ class NetworkGUI:
         self._draw_legend()
         self._update_info()
 
-        self.ax_main.set_title("基于LACP与BPDU协同探测的动态自愈无环网络", fontsize=16, fontweight='bold')
+        self.ax_main.set_title("Dynamic Self-Healing Loop-Free Network Based on LACP & BPDU Collaboration", fontsize=16, fontweight='bold')
         self.ax_main.axis('off')
 
         plt.draw()
 
     def _draw_legend(self):
         legend_elements = [
-            mpatches.Patch(color='#4488ff', label='正常节点'),
-            mpatches.Patch(color='#44ff44', label='根节点'),
-            mpatches.Patch(color='#ff4444', label='故障节点'),
-            mpatches.Patch(color='#44ff44', label='生成树链路'),
-            mpatches.Patch(color='#cccccc', label='备用链路'),
-            mpatches.Patch(color='#888888', label='故障链路'),
-            mpatches.Patch(color='#ffff00', label='选中项')
+            mpatches.Patch(color='#4488ff', label='Normal Node'),
+            mpatches.Patch(color='#44ff44', label='Root Node'),
+            mpatches.Patch(color='#ff4444', label='Failed Node'),
+            mpatches.Patch(color='#44ff44', label='Spanning Tree Link'),
+            mpatches.Patch(color='#cccccc', label='Backup Link'),
+            mpatches.Patch(color='#888888', label='Failed Link'),
+            mpatches.Patch(color='#ffff00', label='Selected Item')
         ]
         self.ax_main.legend(handles=legend_elements, loc='upper right',
                            bbox_to_anchor=(1.02, 1), fontsize=10)
@@ -271,15 +271,15 @@ class NetworkGUI:
         self.ax_info.axis('off')
 
         info_text = "=" * 30 + "\n"
-        info_text += "         信息面板\n"
+        info_text += "         Information Panel\n"
         info_text += "=" * 30 + "\n\n"
 
         if self.selected_node:
             node_data = self.topology_data.get('nodes', {}).get(self.selected_node, {})
-            info_text += f"【选中节点】\n"
-            info_text += f"  名称: {node_data.get('node_name', '?')}\n"
-            info_text += f"  状态: {node_data.get('state', '?')}\n"
-            info_text += f"  根节点: {'是' if node_data.get('is_root') else '否'}\n\n"
+            info_text += f"[Selected Node]\n"
+            info_text += f"  Name: {node_data.get('node_name', '?')}\n"
+            info_text += f"  State: {node_data.get('state', '?')}\n"
+            info_text += f"  Root Node: {'Yes' if node_data.get('is_root') else 'No'}\n\n"
 
         if self.selected_link:
             link_data = self.topology_data.get('links', {}).get(self.selected_link, {})
@@ -287,19 +287,19 @@ class NetworkGUI:
             if len(nodes) >= 2:
                 n1_data = self.topology_data.get('nodes', {}).get(nodes[0], {})
                 n2_data = self.topology_data.get('nodes', {}).get(nodes[1], {})
-                info_text += f"【选中链路】\n"
+                info_text += f"[Selected Link]\n"
                 info_text += f"  {n1_data.get('node_name', '?')} <-> {n2_data.get('node_name', '?')}\n"
-                info_text += f"  状态: {link_data.get('state', '?')}\n"
-                info_text += f"  带宽: {link_data.get('bandwidth', 0)} Mbps\n"
+                info_text += f"  State: {link_data.get('state', '?')}\n"
+                info_text += f"  Bandwidth: {link_data.get('bandwidth', 0)} Mbps\n"
                 is_st = self.selected_link in self.topology_data.get('spanning_tree', [])
-                info_text += f"  生成树: {'是' if is_st else '否'}\n\n"
+                info_text += f"  Spanning Tree: {'Yes' if is_st else 'No'}\n\n"
 
         info_text += "=" * 30 + "\n"
-        info_text += "         操作说明\n"
+        info_text += "         Instructions\n"
         info_text += "=" * 30 + "\n"
-        info_text += "• 点击节点/链路选中\n"
-        info_text += "• 使用右侧按钮操作\n"
-        info_text += "• 黄色高亮表示选中\n"
+        info_text += "• Click node/link to select\n"
+        info_text += "• Use buttons on right panel\n"
+        info_text += "• Yellow highlight means selected\n"
 
         self.ax_info.text(0.02, 0.98, info_text,
                          transform=self.ax_info.transAxes,

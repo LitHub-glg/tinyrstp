@@ -51,9 +51,11 @@ class Port:
 
 
 class Node:
+    _id_counter = 0
+
     def __init__(self, node_name: str):
-        import uuid
-        self.node_id = str(uuid.uuid4())[:8]
+        Node._id_counter += 1
+        self.id = f"node_{Node._id_counter}"
         self.node_name = node_name
         self.state = NodeState.ACTIVE
         self.ports: Dict[int, Port] = {}
@@ -65,7 +67,7 @@ class Node:
 
     def add_port(self, port_id: int) -> Port:
         if port_id not in self.ports:
-            self.ports[port_id] = Port(port_id, self.node_id)
+            self.ports[port_id] = Port(port_id, self.id)
         return self.ports[port_id]
 
     def get_port(self, port_id: int) -> Optional[Port]:
@@ -96,7 +98,7 @@ class Node:
 
     def to_dict(self) -> dict:
         return {
-            'node_id': self.node_id,
+            'node_id': self.id,
             'node_name': self.node_name,
             'state': self.state.value,
             'is_root': self.is_root,

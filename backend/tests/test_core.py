@@ -19,7 +19,7 @@ class TestNode:
         port = node.add_port(1)
         assert port is not None
         assert port.port_id == 1
-        assert port.node_id == node.node_id
+        assert port.node_id == node.id
 
     def test_set_failed(self):
         node = Node("TestNode")

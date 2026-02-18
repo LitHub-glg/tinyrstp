@@ -2,7 +2,7 @@ import asyncio
 import time
 import struct
 from typing import Dict, List, Optional, Callable
-from backend.core.node import Node, Port, PortState, NodeState
+from node import Node, Port, PortState, NodeState
 
 
 class BPDU:
@@ -82,8 +82,8 @@ class BPDUManager:
         self.last_bpdu_received: Dict[str, float] = {}
 
     def add_node(self, node: Node):
-        self.nodes[node.id] = node
-        self.last_bpdu_received[node.id] = time.time()
+        self.nodes[node.node_id] = node
+        self.last_bpdu_received[node.node_id] = time.time()
 
     def register_topology_change_callback(self, callback: Callable[[], None]):
         self.on_topology_change.append(callback)
@@ -98,8 +98,8 @@ class BPDUManager:
             return
 
         bpdu = BPDU(
-            root_id=node.root_id or node.id,
-            sender_id=node.id,
+            root_id=node.root_id or node.node_id,
+            sender_id=node.node_id,
             port_id=port.port_id,
             cost=node.root_path_cost,
             max_age=self.max_age,
@@ -147,15 +147,12 @@ class BPDUManager:
                 node.parent_port = port
                 self._trigger_topology_change()
             elif new_cost == node.root_path_cost:
-                if bpdu.sender_id < node.id:
+                if bpdu.sender_id < node.node_id:
                     node.parent_port = port
                     self._trigger_topology_change()
 
     def _get_node_priority(self, node_id: str) -> int:
-        try:
-            return int(node_id.split('_')[1])
-        except (IndexError, ValueError):
-            return 0
+        return int(node_id, 16) if node_id else 0xFFFF
 
     def _trigger_topology_change(self):
         for callback in self.on_topology_change:
@@ -167,7 +164,7 @@ class BPDUManager:
     def _check_node_alive(self, node: Node):
         if node.state == NodeState.FAILED:
             return
-        last_time = self.last_bpdu_received.get(node.id, 0)
+        last_time = self.last_bpdu_received.get(node.node_id, 0)
         if (time.time() - last_time) > self.max_age:
             node.set_failed()
             for callback in self.on_node_failure:

@@ -26,17 +26,17 @@ class STPCalculator:
         if not active_nodes:
             return set()
 
-        node_id_set = {n.node_id for n in active_nodes}
-        visited = {root.node_id}
+        node_id_set = {n.id for n in active_nodes}
+        visited = {root.id}
         mst_links = set()
 
         edge_heap = []
 
         neighbors = self.topology.get_neighbors(root)
         for neighbor, link in neighbors:
-            if neighbor.node_id in node_id_set:
+            if neighbor.id in node_id_set:
                 cost = link.get_cost()
-                heapq.heappush(edge_heap, (cost, link.link_id, root.node_id, neighbor.node_id))
+                heapq.heappush(edge_heap, (cost, link.link_id, root.id, neighbor.id))
 
         while edge_heap and len(visited) < len(node_id_set):
             cost, link_id, from_id, to_id = heapq.heappop(edge_heap)
@@ -55,7 +55,7 @@ class STPCalculator:
             if to_node:
                 new_neighbors = self.topology.get_neighbors(to_node)
                 for new_neighbor, new_link in new_neighbors:
-                    new_neighbor_id = new_neighbor.node_id
+                    new_neighbor_id = new_neighbor.id
                     if new_neighbor_id not in visited and new_neighbor_id in node_id_set:
                         new_cost = new_link.get_cost()
                         heapq.heappush(

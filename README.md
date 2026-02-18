@@ -153,6 +153,31 @@ python3 main.py --mock
 | POST | /api/test/scenario/{name} | 执行测试场景 |
 | GET | /api/test/status | 获取测试状态 |
 
+### 调试接口
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | /api/debug/status | 获取系统调试状态 |
+| GET | /api/debug/nodes/{node_id} | 获取节点详细信息 |
+| GET | /api/debug/links/{link_id} | 获取链路详细信息 |
+| GET | /api/debug/logs | 获取最近日志内容 |
+
+**调试接口使用示例**（在浏览器中访问）：
+
+```
+# 查看系统状态
+http://localhost:5002/api/debug/status
+
+# 查看节点详情（node_id需要替换为实际ID）
+http://localhost:5002/api/debug/nodes/abc12345
+
+# 查看链路详情（link_id需要替换为实际ID）
+http://localhost:5002/api/debug/links/abc12345-1<->def67890-1
+
+# 查看日志
+http://localhost:5002/api/debug/logs
+```
+
 ## 测试
 
 ### 后端测试
@@ -199,9 +224,9 @@ NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+
 ```
 UserWarning: Glyph ... missing from font(s) DejaVu Sans Mono
 ```
-- **原因**：matplotlib默认字体不支持中文
-- **影响**：⚠️ 不影响功能，已配置字体支持
-- **解决方案**：已在 `frontend/gui/main.py` 中配置中文字体
+- **原因**：matplotlib默认字体不支持中文（现已替换为英文）
+- **影响**：⚠️ 不影响功能
+- **解决方案**：已将GUI界面中的所有中文替换为英文
 
 #### 3. Tkinter弃用警告
 ```
@@ -405,7 +430,17 @@ python3 test_gui_offline.py
 
 ## 更新日志
 
-### v1.1.0 (最新)
+### v1.2.1 (最新)
+- ✅ 将GUI界面中的所有中文替换为英文
+- ✅ 修复字体警告问题
+- ✅ 更新相关文档
+
+### v1.2.0
+- ✅ 添加调试API接口（/api/debug/*）
+- ✅ 支持通过浏览器查询节点/链路状态
+- ✅ 支持通过API查看日志内容
+- ✅ 修复matplotlib后端兼容性问题
+- ✅ 自动检测最佳GUI后端
 - ✅ 修复GUI窗口打开但无内容显示的问题
 - ✅ 添加GUI调试工具（debug_gui.py）
 - ✅ 添加GUI离线测试（test_gui_offline.py）

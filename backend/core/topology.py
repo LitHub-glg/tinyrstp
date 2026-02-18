@@ -13,7 +13,7 @@ class Topology:
         self.last_update_time = time.time()
 
     def add_node(self, node: Node):
-        self.nodes[node.node_id] = node
+        self.nodes[node.id] = node
 
     def get_node(self, node_id: str) -> Optional[Node]:
         return self.nodes.get(node_id)
@@ -52,11 +52,11 @@ class Topology:
             if not link.is_up():
                 continue
             n1_id, n2_id = link.get_connected_nodes()
-            if node.node_id == n1_id:
+            if node.id == n1_id:
                 neighbor = self.nodes.get(n2_id)
                 if neighbor and neighbor.state == NodeState.ACTIVE:
                     neighbors.append((neighbor, link))
-            elif node.node_id == n2_id:
+            elif node.id == n2_id:
                 neighbor = self.nodes.get(n1_id)
                 if neighbor and neighbor.state == NodeState.ACTIVE:
                     neighbors.append((neighbor, link))
@@ -66,7 +66,7 @@ class Topology:
         node_links = []
         for link in self.links.values():
             n1_id, n2_id = link.get_connected_nodes()
-            if node.node_id in (n1_id, n2_id):
+            if node.id in (n1_id, n2_id):
                 node_links.append(link)
         return node_links
 
@@ -77,11 +77,14 @@ class Topology:
             return
 
         def get_priority(node: Node) -> int:
-            return int(node.node_id, 16)
+            try:
+                return int(node.id.split('_')[1])
+            except (IndexError, ValueError):
+                return 0
 
         self.root_node = min(active_nodes, key=get_priority)
         self.root_node.is_root = True
-        self.root_node.root_id = self.root_node.node_id
+        self.root_node.root_id = self.root_node.id
         self.root_node.root_path_cost = 0
 
         for node in active_nodes:
@@ -110,7 +113,7 @@ class Topology:
 
         for link in self.links.values():
             ids = link.get_connected_nodes()
-            if (n1.node_id in ids and n2.node_id in ids):
+            if (n1.id in ids and n2.id in ids):
                 link.set_state(LinkState.DOWN)
                 return True
         return False
@@ -123,7 +126,7 @@ class Topology:
 
         for link in self.links.values():
             ids = link.get_connected_nodes()
-            if (n1.node_id in ids and n2.node_id in ids):
+            if (n1.id in ids and n2.id in ids):
                 link.set_state(LinkState.UP)
                 return True
         return False
@@ -144,9 +147,9 @@ class Topology:
 
     def to_dict(self) -> dict:
         return {
-            'nodes': {n.node_id: n.to_dict() for n in self.nodes.values()},
+            'nodes': {n.id: n.to_dict() for n in self.nodes.values()},
             'links': {l.link_id: l.to_dict() for l in self.links.values()},
             'spanning_tree': list(self.spanning_tree_links),
-            'root_node': self.root_node.node_id if self.root_node else None,
+            'root_node': self.root_node.id if self.root_node else None,
             'last_update': self.last_update_time
         }

@@ -134,6 +134,15 @@ solo_cpc/
 | POST | /api/test/scenario/{name} | 执行测试场景 |
 | GET | /api/test/status | 获取测试状态 |
 
+### 调试接口
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | /api/debug/status | 获取系统调试状态 |
+| GET | /api/debug/nodes/{node_id} | 获取节点详细信息 |
+| GET | /api/debug/links/{link_id} | 获取链路详细信息 |
+| GET | /api/debug/logs | 获取最近日志内容 |
+
 ## 测试策略
 
 ### 后端测试
@@ -303,14 +312,9 @@ NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+
 ```
 UserWarning: Glyph ... missing from font(s) DejaVu Sans Mono
 ```
-
-- **原因**：matplotlib默认字体不支持中文
-- **影响**：⚠️ 不影响功能，已配置字体支持
-- **解决方案**：已在 `frontend/gui/main.py` 中配置中文字体：
-  ```python
-  plt.rcParams['font.sans-serif'] = ['Arial Unicode MS', 'SimHei', 'DejaVu Sans']
-  plt.rcParams['axes.unicode_minus'] = False
-  ```
+- **原因**：matplotlib默认字体不支持中文（现已替换为英文）
+- **影响**：⚠️ 不影响功能
+- **解决方案**：已将GUI界面中的所有中文替换为英文
 
 ### 3. Tkinter弃用警告
 
@@ -323,6 +327,134 @@ DEPRECATION WARNING: The system version of Tk is deprecated
 - **解决方案**：设置环境变量 `export TK_SILENCE_DEPRECATION=1`
 
 ## 调试工具
+
+### 调试API接口
+
+通过RESTful API实现调试查询，可在浏览器中直接访问：
+
+#### 1. 系统调试状态
+
+```
+GET http://localhost:5002/api/debug/status
+```
+
+返回示例：
+```json
+{
+  "topology": {
+    "total_nodes": 4,
+    "active_nodes": 4,
+    "failed_nodes": 0,
+    "total_links": 6,
+    "up_links": 6,
+    "down_links": 0,
+    "spanning_tree_links": 3
+  },
+  "root_node": {
+    "node_id": "abc12345",
+    "node_name": "Node1"
+  },
+  "stp": { ... },
+  "timestamp": 1708123456.789
+}
+```
+
+#### 2. 节点详细信息
+
+```
+GET http://localhost:5002/api/debug/nodes/{node_id}
+```
+
+返回示例：
+```json
+{
+  "node": {
+    "node_id": "abc12345",
+    "node_name": "Node1",
+    "state": "ACTIVE",
+    "is_root": true
+  },
+  "ports": {
+    "1": {"port_id": 1, "state": "FORWARDING", "node_id": "abc12345"},
+    "2": {"port_id": 2, "state": "FORWARDING", "node_id": "abc12345"},
+    "3": {"port_id": 3, "state": "BLOCKING", "node_id": "abc12345"}
+  },
+  "connected_links": [
+    {
+      "link_id": "abc12345-1<->def67890-1",
+      "state": "UP",
+      "connected_to": "Node2",
+      "bandwidth": 1000,
+      "latency": 1,
+      "is_in_spanning_tree": true
+    }
+  ],
+  "is_root": true,
+  "root_path_cost": 0,
+  "parent_port": null
+}
+```
+
+#### 3. 链路详细信息
+
+```
+GET http://localhost:5002/api/debug/links/{link_id}
+```
+
+返回示例：
+```json
+{
+  "link": {
+    "link_id": "abc12345-1<->def67890-1",
+    "state": "UP",
+    "bandwidth": 1000,
+    "latency": 1
+  },
+  "endpoints": {
+    "node1": {
+      "node_id": "abc12345",
+      "node_name": "Node1",
+      "port_id": 1
+    },
+    "node2": {
+      "node_id": "def67890",
+      "node_name": "Node2",
+      "port_id": 1
+    }
+  },
+  "lacp": {
+    "success_count": 10,
+    "fail_count": 0,
+    "last_lacp_time": 1708123456.789
+  },
+  "is_in_spanning_tree": true,
+  "created_at": 1708123400.123
+}
+```
+
+#### 4. 日志查询
+
+```
+GET http://localhost:5002/api/debug/logs
+```
+
+返回示例：
+```json
+{
+  "log_directory": "/path/to/logs",
+  "logs": [
+    {
+      "filename": "network_20260218.log",
+      "size": 10240,
+      "last_100_lines": [
+        "2026-02-18 10:39:32 | INFO | Startup: NetworkAPI",
+        "2026-02-18 10:39:32 | INFO | API Request: GET /api/topology",
+        ...
+      ]
+    }
+  ]
+}
+```
 
 ### GUI调试工具（debug_gui.py）
 

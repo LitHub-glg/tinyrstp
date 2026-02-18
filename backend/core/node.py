@@ -1,6 +1,5 @@
-import uuid
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 import time
 
 
@@ -22,12 +21,12 @@ class Port:
         self.port_id = port_id
         self.node_id = node_id
         self.state = PortState.DISABLED
-        self.link: Optional['Link'] = None
+        self.link = None
         self.mac_table: Dict[str, str] = {}
         self.last_bpdu_time = 0.0
         self.bpdu_count = 0
 
-    def connect_link(self, link: 'Link'):
+    def connect_link(self, link):
         self.link = link
         self.state = PortState.BLOCKING
 
@@ -42,9 +41,18 @@ class Port:
         self.last_bpdu_time = time.time()
         self.bpdu_count += 1
 
+    def to_dict(self) -> dict:
+        return {
+            'port_id': self.port_id,
+            'node_id': self.node_id,
+            'state': self.state.value,
+            'has_link': self.link is not None
+        }
+
 
 class Node:
     def __init__(self, node_name: str):
+        import uuid
         self.node_id = str(uuid.uuid4())[:8]
         self.node_name = node_name
         self.state = NodeState.ACTIVE
@@ -55,7 +63,7 @@ class Node:
         self.parent_port: Optional[Port] = None
         self.last_heartbeat = time.time()
 
-    def add_port(self, port_id: int):
+    def add_port(self, port_id: int) -> Port:
         if port_id not in self.ports:
             self.ports[port_id] = Port(port_id, self.node_id)
         return self.ports[port_id]
@@ -63,10 +71,10 @@ class Node:
     def get_port(self, port_id: int) -> Optional[Port]:
         return self.ports.get(port_id)
 
-    def get_active_ports(self) -> List[Port]:
+    def get_active_ports(self):
         return [p for p in self.ports.values() if p.state != PortState.DISABLED]
 
-    def get_forwarding_ports(self) -> List[Port]:
+    def get_forwarding_ports(self):
         return [p for p in self.ports.values() if p.state == PortState.FORWARDING]
 
     def set_failed(self):
@@ -86,16 +94,11 @@ class Node:
             return False
         return (time.time() - self.last_heartbeat) < timeout
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             'node_id': self.node_id,
             'node_name': self.node_name,
             'state': self.state.value,
             'is_root': self.is_root,
-            'ports': {
-                pid: {
-                    'state': p.state.value,
-                    'has_link': p.link is not None
-                } for pid, p in self.ports.items()
-            }
+            'ports': {pid: p.to_dict() for pid, p in self.ports.items()}
         }

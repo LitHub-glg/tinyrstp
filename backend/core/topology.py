@@ -1,7 +1,7 @@
-import time
 from typing import Dict, List, Optional, Set, Tuple
-from node import Node, Port, PortState, NodeState
-from link import Link, LinkState
+import time
+from backend.core.node import Node, NodeState, PortState
+from backend.core.link import Link, LinkState
 
 
 class Topology:
@@ -102,7 +102,7 @@ class Topology:
                         if port.state != PortState.BLOCKING:
                             port.update_state(PortState.BLOCKING)
 
-    def inject_link_failure(self, node1_name: str, node2_name: str):
+    def inject_link_failure(self, node1_name: str, node2_name: str) -> bool:
         n1 = self.get_node_by_name(node1_name)
         n2 = self.get_node_by_name(node2_name)
         if not n1 or not n2:
@@ -115,7 +115,7 @@ class Topology:
                 return True
         return False
 
-    def inject_link_recovery(self, node1_name: str, node2_name: str):
+    def inject_link_recovery(self, node1_name: str, node2_name: str) -> bool:
         n1 = self.get_node_by_name(node1_name)
         n2 = self.get_node_by_name(node2_name)
         if not n1 or not n2:
@@ -128,14 +128,14 @@ class Topology:
                 return True
         return False
 
-    def inject_node_failure(self, node_name: str):
+    def inject_node_failure(self, node_name: str) -> bool:
         node = self.get_node_by_name(node_name)
         if node:
             node.set_failed()
             return True
         return False
 
-    def inject_node_recovery(self, node_name: str):
+    def inject_node_recovery(self, node_name: str) -> bool:
         node = self.get_node_by_name(node_name)
         if node:
             node.set_active()

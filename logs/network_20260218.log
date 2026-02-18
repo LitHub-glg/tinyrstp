@@ -1,0 +1,72 @@
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | Startup: NetworkAPI
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Request: GET /api/topology
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Response: GET /api/topology -> 200
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | Startup: NetworkAPI
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Request: GET /api/topology/nodes
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Response: GET /api/topology/nodes -> 200
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | Startup: NetworkAPI
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Request: GET /api/topology/links
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Response: GET /api/topology/links -> 200
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | Startup: NetworkAPI
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Request: GET /api/topology/spanning-tree
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Response: GET /api/topology/spanning-tree -> 200
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | Startup: NetworkAPI
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Request: POST /api/topology/reset
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | Topology Change: reset | [node_count=4 | link_count=6]
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Response: POST /api/topology/reset -> 200
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | Startup: NetworkAPI
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Request: GET /api/topology/nodes
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Response: GET /api/topology/nodes -> 200
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Request: POST /api/nodes/25e3c4f9/fail
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | STP Recalculation | [root_node=Node4 | link_count=2]
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | Node Event: failed | [node_id=25e3c4f9] | Context: node_name=Node1
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Response: POST /api/nodes/25e3c4f9/fail -> 200
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | Startup: NetworkAPI
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Request: GET /api/topology/nodes
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Response: GET /api/topology/nodes -> 200
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Request: POST /api/nodes/663d9095/fail
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | STP Recalculation | [root_node=Node2 | link_count=2]
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | Node Event: failed | [node_id=663d9095] | Context: node_name=Node1
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Response: POST /api/nodes/663d9095/fail -> 200
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Request: POST /api/nodes/663d9095/recover
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | Node Event: recovered | [node_id=663d9095] | Context: node_name=Node1
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Response: POST /api/nodes/663d9095/recover -> 200
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | Startup: NetworkAPI
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Request: GET /api/topology/links
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Response: GET /api/topology/links -> 200
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Request: POST /api/links/285d8b78-1<->1c7c2ccd-1/toggle
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | STP Recalculation | [root_node=Node3 | link_count=3]
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | Link Event: toggled_to_DOWN | [link_id=285d8b78-1<->1c7c2ccd-1]
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Response: POST /api/links/285d8b78-1<->1c7c2ccd-1/toggle -> 200
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | Startup: NetworkAPI
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Request: GET /api/topology/links
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Response: GET /api/topology/links -> 200
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Request: POST /api/links/c3c3f5af-1<->c06b23fe-1/up
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | STP Recalculation | [root_node=Node2 | link_count=3]
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | Link Event: up | [link_id=c3c3f5af-1<->c06b23fe-1]
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Response: POST /api/links/c3c3f5af-1<->c06b23fe-1/up -> 200
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | Startup: NetworkAPI
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Request: GET /api/topology/links
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Response: GET /api/topology/links -> 200
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Request: POST /api/links/05eddb9d-1<->2a80f7b7-1/down
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | STP Recalculation | [root_node=Node1 | link_count=3]
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | Link Event: down | [link_id=05eddb9d-1<->2a80f7b7-1]
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Response: POST /api/links/05eddb9d-1<->2a80f7b7-1/down -> 200
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | Startup: NetworkAPI
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Request: POST /api/test/scenario/link_failure
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | STP Recalculation | [root_node=Node4 | link_count=3]
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | Scenario Executed: link_failure | [result=success]
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Response: POST /api/test/scenario/link_failure -> 200
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | Startup: NetworkAPI
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Request: POST /api/test/scenario/link_recovery
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | STP Recalculation | [root_node=Node1 | link_count=3]
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | Scenario Executed: link_recovery | [result=success]
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Response: POST /api/test/scenario/link_recovery -> 200
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | Startup: NetworkAPI
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Request: POST /api/test/scenario/node_failure
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | STP Recalculation | [root_node=Node1 | link_count=2]
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | Scenario Executed: node_failure | [result=success]
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Response: POST /api/test/scenario/node_failure -> 200
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | Startup: NetworkAPI
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Request: GET /api/test/status
+2026-02-18 10:39:32 | INFO     | NetworkSimulator | API Response: GET /api/test/status -> 200

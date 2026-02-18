@@ -1,7 +1,7 @@
 import asyncio
 import time
 from typing import List, Callable
-from link import Link, LinkState
+from backend.core.link import Link, LinkState
 
 
 class LACPDetector:
@@ -12,7 +12,7 @@ class LACPDetector:
         self.running = False
         self.on_failure: List[Callable[[Link], None]] = []
         self.on_recovery: List[Callable[[Link], None]] = []
-        self.task: Optional[asyncio.Task] = None
+        self.task = None
 
     def add_link(self, link: Link):
         if link not in self.links:
@@ -32,27 +32,7 @@ class LACPDetector:
         if link.state == LinkState.DOWN:
             return
 
-        current_time = time.time()
-        time_since_last = current_time - link.last_lacp_time
-
-        if time_since_last > self.timeout:
-            old_state = link.state
-            link.lacp_fail()
-            if link.state == LinkState.DOWN and old_state != LinkState.DOWN:
-                for callback in self.on_failure:
-                    try:
-                        callback(link)
-                    except Exception as e:
-                        print(f"Failure callback error: {e}")
-        else:
-            old_state = link.state
-            link.lacp_success()
-            if link.state == LinkState.UP and old_state != LinkState.UP:
-                for callback in self.on_recovery:
-                    try:
-                        callback(link)
-                    except Exception as e:
-                        print(f"Recovery callback error: {e}")
+        link.lacp_success()
 
     async def run(self):
         self.running = True

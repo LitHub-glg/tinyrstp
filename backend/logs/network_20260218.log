@@ -1,0 +1,57 @@
+2026-02-18 10:45:34 | INFO     | NetworkSimulator | Startup: BackendServer
+2026-02-18 10:45:34 | INFO     | NetworkSimulator | Startup: NetworkAPI
+2026-02-18 10:45:34 | INFO     | NetworkSimulator | Starting server on 0.0.0.0:5002
+2026-02-18 10:46:33 | INFO     | NetworkSimulator | API Request: GET /api/topology
+2026-02-18 10:46:33 | INFO     | NetworkSimulator | API Response: GET /api/topology -> 200
+2026-02-18 10:47:19 | INFO     | NetworkSimulator | API Request: GET /api/topology
+2026-02-18 10:47:19 | INFO     | NetworkSimulator | API Response: GET /api/topology -> 200
+2026-02-18 11:17:10 | INFO     | NetworkSimulator | API Request: GET /api/topology
+2026-02-18 11:17:10 | INFO     | NetworkSimulator | API Response: GET /api/topology -> 200
+2026-02-18 11:17:44 | INFO     | NetworkSimulator | API Request: GET /api/topology
+2026-02-18 11:17:44 | INFO     | NetworkSimulator | API Response: GET /api/topology -> 200
+2026-02-18 15:37:32 | INFO     | NetworkSimulator | API Request: GET /api/topology
+2026-02-18 15:37:32 | INFO     | NetworkSimulator | API Response: GET /api/topology -> 200
+2026-02-18 15:40:17 | INFO     | NetworkSimulator | API Request: GET /api/topology
+2026-02-18 15:40:17 | INFO     | NetworkSimulator | API Response: GET /api/topology -> 200
+2026-02-18 15:40:36 | INFO     | NetworkSimulator | API Request: GET /api/topology
+2026-02-18 15:40:36 | INFO     | NetworkSimulator | API Response: GET /api/topology -> 200
+2026-02-18 15:42:07 | INFO     | NetworkSimulator | API Request: GET /api/topology
+2026-02-18 15:42:07 | INFO     | NetworkSimulator | API Response: GET /api/topology -> 200
+2026-02-18 15:45:23 | INFO     | NetworkSimulator | API Request: GET /api/topology
+2026-02-18 15:45:23 | INFO     | NetworkSimulator | API Response: GET /api/topology -> 200
+2026-02-18 15:45:38 | INFO     | NetworkSimulator | API Request: GET /api/topology
+2026-02-18 15:45:38 | INFO     | NetworkSimulator | API Response: GET /api/topology -> 200
+2026-02-18 15:46:35 | INFO     | NetworkSimulator | API Request: POST /api/topology/reset
+2026-02-18 15:46:35 | INFO     | NetworkSimulator | Topology Change: reset | [node_count=4 | link_count=6]
+2026-02-18 15:46:35 | INFO     | NetworkSimulator | API Response: POST /api/topology/reset -> 200
+2026-02-18 15:46:35 | INFO     | NetworkSimulator | API Request: GET /api/topology
+2026-02-18 15:46:35 | INFO     | NetworkSimulator | API Response: GET /api/topology -> 200
+2026-02-18 15:46:46 | INFO     | NetworkSimulator | API Request: POST /api/test/scenario/node_failure
+2026-02-18 15:46:46 | INFO     | NetworkSimulator | STP Recalculation | [root_node=Node1 | link_count=2]
+2026-02-18 15:46:46 | INFO     | NetworkSimulator | Scenario Executed: node_failure | [result=success]
+2026-02-18 15:46:46 | INFO     | NetworkSimulator | API Response: POST /api/test/scenario/node_failure -> 200
+2026-02-18 15:46:46 | INFO     | NetworkSimulator | API Request: GET /api/topology
+2026-02-18 15:46:46 | INFO     | NetworkSimulator | API Response: GET /api/topology -> 200
+2026-02-18 15:47:03 | INFO     | NetworkSimulator | API Request: POST /api/links/b362c2bc-1<->d8b6fec4-1/toggle
+2026-02-18 15:47:03 | INFO     | NetworkSimulator | STP Recalculation | [root_node=Node1 | link_count=2]
+2026-02-18 15:47:03 | INFO     | NetworkSimulator | Link Event: toggled_to_DOWN | [link_id=b362c2bc-1<->d8b6fec4-1]
+2026-02-18 15:47:03 | INFO     | NetworkSimulator | API Response: POST /api/links/b362c2bc-1<->d8b6fec4-1/toggle -> 200
+2026-02-18 15:47:03 | INFO     | NetworkSimulator | API Request: GET /api/topology
+2026-02-18 15:47:03 | INFO     | NetworkSimulator | API Response: GET /api/topology -> 200
+2026-02-18 15:47:05 | INFO     | NetworkSimulator | API Request: POST /api/links/b362c2bc-1<->d8b6fec4-1/toggle
+2026-02-18 15:47:05 | INFO     | NetworkSimulator | STP Recalculation | [root_node=Node1 | link_count=2]
+2026-02-18 15:47:05 | INFO     | NetworkSimulator | Link Event: toggled_to_UP | [link_id=b362c2bc-1<->d8b6fec4-1]
+2026-02-18 15:47:05 | INFO     | NetworkSimulator | API Response: POST /api/links/b362c2bc-1<->d8b6fec4-1/toggle -> 200
+2026-02-18 15:47:05 | INFO     | NetworkSimulator | API Request: GET /api/topology
+2026-02-18 15:47:05 | INFO     | NetworkSimulator | API Response: GET /api/topology -> 200
+2026-02-18 15:47:06 | INFO     | NetworkSimulator | API Request: POST /api/links/b362c2bc-1<->d8b6fec4-1/toggle
+2026-02-18 15:47:06 | INFO     | NetworkSimulator | Link Event: toggled_to_DOWN | [link_id=b362c2bc-1<->d8b6fec4-1]
+2026-02-18 15:47:06 | INFO     | NetworkSimulator | API Response: POST /api/links/b362c2bc-1<->d8b6fec4-1/toggle -> 200
+2026-02-18 15:47:06 | INFO     | NetworkSimulator | API Request: GET /api/topology
+2026-02-18 15:47:06 | INFO     | NetworkSimulator | API Response: GET /api/topology -> 200
+2026-02-18 15:47:07 | INFO     | NetworkSimulator | API Request: POST /api/links/b362c2bc-1<->d8b6fec4-1/toggle
+2026-02-18 15:47:07 | INFO     | NetworkSimulator | STP Recalculation | [root_node=Node1 | link_count=2]
+2026-02-18 15:47:07 | INFO     | NetworkSimulator | Link Event: toggled_to_UP | [link_id=b362c2bc-1<->d8b6fec4-1]
+2026-02-18 15:47:07 | INFO     | NetworkSimulator | API Response: POST /api/links/b362c2bc-1<->d8b6fec4-1/toggle -> 200
+2026-02-18 15:47:07 | INFO     | NetworkSimulator | API Request: GET /api/topology
+2026-02-18 15:47:07 | INFO     | NetworkSimulator | API Response: GET /api/topology -> 200

@@ -2,7 +2,7 @@ import asyncio
 import time
 import struct
 from typing import Dict, List, Optional, Callable
-from node import Node, Port, PortState, NodeState
+from backend.core.node import Node, Port, PortState, NodeState
 
 
 class BPDU:
@@ -78,7 +78,7 @@ class BPDUManager:
         self.running = False
         self.on_topology_change: List[Callable[[], None]] = []
         self.on_node_failure: List[Callable[[Node], None]] = []
-        self.task: Optional[asyncio.Task] = None
+        self.task = None
         self.last_bpdu_received: Dict[str, float] = {}
 
     def add_node(self, node: Node):
@@ -127,29 +127,33 @@ class BPDUManager:
         return None
 
     def _process_bpdu(self, node: Node, port: Port, bpdu: BPDU):
+        changed = False
+
         if node.root_id is None:
             node.root_id = bpdu.root_id
-            self._trigger_topology_change()
-            return
+            changed = True
+        else:
+            current_root_priority = self._get_node_priority(node.root_id)
+            new_root_priority = self._get_node_priority(bpdu.root_id)
 
-        current_root_priority = self._get_node_priority(node.root_id)
-        new_root_priority = self._get_node_priority(bpdu.root_id)
-
-        if new_root_priority < current_root_priority:
-            node.root_id = bpdu.root_id
-            node.root_path_cost = bpdu.cost + 1
-            node.parent_port = port
-            self._trigger_topology_change()
-        elif bpdu.root_id == node.root_id:
-            new_cost = bpdu.cost + 1
-            if new_cost < node.root_path_cost:
-                node.root_path_cost = new_cost
+            if new_root_priority < current_root_priority:
+                node.root_id = bpdu.root_id
+                node.root_path_cost = bpdu.cost + 1
                 node.parent_port = port
-                self._trigger_topology_change()
-            elif new_cost == node.root_path_cost:
-                if bpdu.sender_id < node.node_id:
+                changed = True
+            elif bpdu.root_id == node.root_id:
+                new_cost = bpdu.cost + 1
+                if new_cost < node.root_path_cost:
+                    node.root_path_cost = new_cost
                     node.parent_port = port
-                    self._trigger_topology_change()
+                    changed = True
+                elif new_cost == node.root_path_cost:
+                    if bpdu.sender_id < node.node_id:
+                        node.parent_port = port
+                        changed = True
+
+        if changed:
+            self._trigger_topology_change()
 
     def _get_node_priority(self, node_id: str) -> int:
         return int(node_id, 16) if node_id else 0xFFFF
@@ -179,6 +183,7 @@ class BPDUManager:
         while self.running:
             for node in self.nodes.values():
                 if node.state == NodeState.ACTIVE:
+                    self.last_bpdu_received[node.node_id] = time.time()
                     for port in node.ports.values():
                         if port.link and port.link.is_up():
                             self.send_bpdu(node, port)

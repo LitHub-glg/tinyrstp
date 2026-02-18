@@ -1,8 +1,8 @@
 import heapq
-from typing import Dict, Set, Tuple, Optional
-from topology import Topology
-from node import Node
-from link import Link
+from typing import Set
+from backend.core.topology import Topology
+from backend.core.node import Node, PortState
+from backend.core.link import Link
 
 
 class STPCalculator:
@@ -70,7 +70,7 @@ class STPCalculator:
         self.topology.update_spanning_tree(st_links)
         return st_links
 
-    def get_spanning_tree_info(self) -> Dict:
+    def get_spanning_tree_info(self) -> dict:
         st_links = self.topology.spanning_tree_links
         info = {
             'root_node': self.topology.root_node.node_name if self.topology.root_node else None,

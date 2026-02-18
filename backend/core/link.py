@@ -1,7 +1,6 @@
 from enum import Enum
-import time
 from typing import Optional, Tuple
-from node import Port
+import time
 
 
 class LinkState(Enum):
@@ -11,7 +10,7 @@ class LinkState(Enum):
 
 
 class Link:
-    def __init__(self, port1: Port, port2: Port, bandwidth: float = 1000.0, latency: float = 1.0):
+    def __init__(self, port1, port2, bandwidth: float = 1000.0, latency: float = 1.0):
         self.link_id = f"{port1.node_id}-{port1.port_id}<->{port2.node_id}-{port2.port_id}"
         self.port1 = port1
         self.port2 = port2
@@ -26,7 +25,7 @@ class Link:
         port1.connect_link(self)
         port2.connect_link(self)
 
-    def get_other_port(self, port: Port) -> Optional[Port]:
+    def get_other_port(self, port):
         if port == self.port1:
             return self.port2
         elif port == self.port2:

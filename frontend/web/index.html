@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Topology Simulator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Dynamic Self-Healing Loop-Free Network</h1>
+            <p>Based on LACP & BPDU Collaboration</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="chart-area">
+                    <canvas id="networkCanvas"></canvas>
+                </div>
+                <div class="button-area">
+                    <div class="button-row">
+                        <button class="btn btn-warning" id="btnToggle">Toggle</button>
+                        <button class="btn btn-danger" id="btnFail">Fail</button>
+                        <button class="btn btn-success" id="btnRecover">Recover</button>
+                        <button class="btn btn-primary" id="btnReset">Reset</button>
+                    </div>
+                    <div class="button-row">
+                        <button class="btn btn-orange" id="btnScenario1">S1:Link</button>
+                        <button class="btn btn-lime" id="btnScenario2">S2:LinkR</button>
+                        <button class="btn btn-pink" id="btnScenario3">S3:Node</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="right-panel">
+                <div class="legend-area">
+                    <h3>Legend</h3>
+                    <div class="legend-items">
+                        <div class="legend-item">
+                            <span class="legend-color normal-node"></span>
+                            <span>Normal Node</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color root-node"></span>
+                            <span>Root Node</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color failed-node"></span>
+                            <span>Failed Node</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color st-link"></span>
+                            <span>Spanning Tree Link</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color backup-link"></span>
+                            <span>Backup Link</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color failed-link"></span>
+                            <span>Failed Link</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color selected-item"></span>
+                            <span>Selected Item</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-area">
+                    <h3>Information Panel</h3>
+                    <div id="infoContent">
+                        <p class="placeholder">Click on a node or link to see details</p>
+                    </div>
+                    
+                    <h3>Instructions</h3>
+                    <ul class="instructions">
+                        <li>Click node/link to select</li>
+                        <li>Use buttons to control</li>
+                        <li>Yellow highlight = selected</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="status-bar">
+            <span id="statusText">Ready</span>
+            <span id="lastUpdate">Last update: -</span>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>

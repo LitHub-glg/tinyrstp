@@ -5,8 +5,6 @@ let selectedNode = null;
 let selectedLink = null;
 let nodePositions = {};
 let demoRunning = false;
-let animationFrame = null;
-let pulsePhase = 0;
 
 const canvas = document.getElementById('networkCanvas');
 const ctx = canvas.getContext('2d');
@@ -27,8 +25,16 @@ const colors = {
 
 function resizeCanvas() {
     const container = canvas.parentElement;
-    canvas.width = container.clientWidth;
-    canvas.height = container.clientHeight;
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    
+    if (width === 0 || height === 0) {
+        setTimeout(resizeCanvas, 100);
+        return;
+    }
+    
+    canvas.width = width;
+    canvas.height = height;
     draw();
 }
 
@@ -78,6 +84,8 @@ function calculateNodePositions() {
     const centerX = canvasWidth / 2;
     const centerY = canvasHeight / 2;
     const scale = Math.min(canvasWidth, canvasHeight) * 0.3;
+    
+    nodePositions = {};
     
     for (const [nodeId, nodeData] of Object.entries(topologyData.nodes)) {
         const nodeName = nodeData.node_name;
@@ -148,13 +156,25 @@ function updateConnectivityPanel() {
 }
 
 function draw() {
-    if (!topologyData) return;
+    if (!topologyData) {
+        return;
+    }
     
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     drawLinks();
     drawNodes();
     drawConnectivityIndicators();
+}
+
+function startAnimationLoop() {
+    function animate() {
+        if (topologyData && !demoRunning) {
+            draw();
+        }
+        requestAnimationFrame(animate);
+    }
+    animate();
 }
 
 function drawLinks() {
@@ -253,8 +273,6 @@ function drawNodes() {
 function drawConnectivityIndicators() {
     if (!topologyData.nodes) return;
     
-    pulsePhase += 0.05;
-    
     for (const [nodeId, nodeData] of Object.entries(topologyData.nodes)) {
         const pos = nodePositions[nodeId];
         if (!pos) continue;
@@ -266,20 +284,10 @@ function drawConnectivityIndicators() {
         
         if (isRoot || isFailed) continue;
         
-        const indicatorRadius = 40 + Math.sin(pulsePhase) * 3;
-        
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, indicatorRadius, 0, Math.PI * 2);
+        ctx.arc(pos.x, pos.y - 45, 8, 0, Math.PI * 2);
         
         if (isReachable) {
-            ctx.strokeStyle = `rgba(68, 255, 68, ${0.5 + Math.sin(pulsePhase) * 0.3})`;
-            ctx.lineWidth = 2;
-            ctx.setLineDash([5, 5]);
-            ctx.stroke();
-            ctx.setLineDash([]);
-            
-            ctx.beginPath();
-            ctx.arc(pos.x, pos.y - 45, 8, 0, Math.PI * 2);
             ctx.fillStyle = colors.reachable;
             ctx.fill();
             ctx.fillStyle = '#000';
@@ -288,14 +296,6 @@ function drawConnectivityIndicators() {
             ctx.textBaseline = 'middle';
             ctx.fillText('✓', pos.x, pos.y - 45);
         } else {
-            ctx.strokeStyle = `rgba(255, 68, 68, ${0.5 + Math.sin(pulsePhase) * 0.3})`;
-            ctx.lineWidth = 2;
-            ctx.setLineDash([3, 3]);
-            ctx.stroke();
-            ctx.setLineDash([]);
-            
-            ctx.beginPath();
-            ctx.arc(pos.x, pos.y - 45, 8, 0, Math.PI * 2);
             ctx.fillStyle = colors.unreachable;
             ctx.fill();
             ctx.fillStyle = '#fff';
@@ -305,12 +305,6 @@ function drawConnectivityIndicators() {
             ctx.fillText('✗', pos.x, pos.y - 45);
         }
     }
-    
-    animationFrame = requestAnimationFrame(() => {
-        if (!demoRunning) {
-            draw();
-        }
-    });
 }
 
 function getClickedNode(x, y) {
@@ -642,6 +636,7 @@ function setButtonsDisabled(disabled) {
 
 resizeCanvas();
 fetchTopology();
+startAnimationLoop();
 
 setInterval(() => {
     if (!demoRunning) {

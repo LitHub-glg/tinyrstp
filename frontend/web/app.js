@@ -5,7 +5,8 @@ let selectedNode = null;
 let selectedLink = null;
 let nodePositions = {};
 let demoRunning = false;
-let demoSteps = [];
+let animationFrame = null;
+let pulsePhase = 0;
 
 const canvas = document.getElementById('networkCanvas');
 const ctx = canvas.getContext('2d');
@@ -18,6 +19,8 @@ const colors = {
     backupLink: '#cccccc',
     failedLink: '#888888',
     selected: '#ffff00',
+    reachable: '#44ff44',
+    unreachable: '#ff4444',
     text: '#ffffff',
     textDark: '#000000'
 };
@@ -50,6 +53,7 @@ async function fetchTopology() {
         if (!response.ok) throw new Error('Failed to fetch topology');
         topologyData = await response.json();
         calculateNodePositions();
+        updateConnectivityPanel();
         draw();
         updateLastUpdate();
         setStatus('Ready');
@@ -86,6 +90,63 @@ function calculateNodePositions() {
     }
 }
 
+function updateConnectivityPanel() {
+    const connectivityEl = document.getElementById('connectivityContent');
+    
+    if (!topologyData || !topologyData.nodes) {
+        connectivityEl.innerHTML = '<p class="placeholder">No data available</p>';
+        return;
+    }
+    
+    let html = '';
+    const summary = topologyData.connectivity_summary || {};
+    
+    for (const [nodeId, nodeData] of Object.entries(topologyData.nodes)) {
+        const conn = nodeData.connectivity || {};
+        const isRoot = conn.is_root || nodeData.is_root;
+        const reachable = conn.reachable;
+        const blockedBy = conn.blocked_by;
+        
+        let statusIcon, statusClass, reason;
+        
+        if (isRoot) {
+            statusIcon = '★';
+            statusClass = 'reachable';
+            reason = 'Root Node';
+        } else if (reachable) {
+            statusIcon = '✓';
+            statusClass = 'reachable';
+            reason = 'Connected';
+        } else {
+            statusIcon = '✗';
+            statusClass = 'unreachable';
+            switch (blockedBy) {
+                case 'node_failed':
+                    reason = 'Node Failed';
+                    break;
+                case 'no_root':
+                    reason = 'No Root';
+                    break;
+                case 'no_path':
+                    reason = 'No Path';
+                    break;
+                default:
+                    reason = 'Unknown';
+            }
+        }
+        
+        html += `
+            <div class="connectivity-item">
+                <span class="node-name">${nodeData.node_name || nodeId}</span>
+                <span class="conn-status ${statusClass}">${statusIcon} ${reachable || isRoot ? 'Reachable' : 'Unreachable'}</span>
+                <span class="conn-reason">${reason}</span>
+            </div>
+        `;
+    }
+    
+    connectivityEl.innerHTML = html;
+}
+
 function draw() {
     if (!topologyData) return;
     
@@ -93,6 +154,7 @@ function draw() {
     
     drawLinks();
     drawNodes();
+    drawConnectivityIndicators();
 }
 
 function drawLinks() {
@@ -144,6 +206,8 @@ function drawNodes() {
         const isSelected = selectedNode === nodeId;
         const isRoot = nodeData.is_root;
         const isFailed = nodeData.state === 'FAILED';
+        const conn = nodeData.connectivity || {};
+        const isReachable = conn.reachable || conn.is_root;
         
         let color;
         if (isFailed) {
@@ -184,6 +248,69 @@ function drawNodes() {
         ctx.font = '10px Arial';
         ctx.fillText(`${state}${rootLabel}`, pos.x, pos.y + 10);
     }
+}
+
+function drawConnectivityIndicators() {
+    if (!topologyData.nodes) return;
+    
+    pulsePhase += 0.05;
+    
+    for (const [nodeId, nodeData] of Object.entries(topologyData.nodes)) {
+        const pos = nodePositions[nodeId];
+        if (!pos) continue;
+        
+        const conn = nodeData.connectivity || {};
+        const isRoot = conn.is_root || nodeData.is_root;
+        const isReachable = conn.reachable;
+        const isFailed = nodeData.state === 'FAILED';
+        
+        if (isRoot || isFailed) continue;
+        
+        const indicatorRadius = 40 + Math.sin(pulsePhase) * 3;
+        
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, indicatorRadius, 0, Math.PI * 2);
+        
+        if (isReachable) {
+            ctx.strokeStyle = `rgba(68, 255, 68, ${0.5 + Math.sin(pulsePhase) * 0.3})`;
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y - 45, 8, 0, Math.PI * 2);
+            ctx.fillStyle = colors.reachable;
+            ctx.fill();
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 10px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('✓', pos.x, pos.y - 45);
+        } else {
+            ctx.strokeStyle = `rgba(255, 68, 68, ${0.5 + Math.sin(pulsePhase) * 0.3})`;
+            ctx.lineWidth = 2;
+            ctx.setLineDash([3, 3]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y - 45, 8, 0, Math.PI * 2);
+            ctx.fillStyle = colors.unreachable;
+            ctx.fill();
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 10px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('✗', pos.x, pos.y - 45);
+        }
+    }
+    
+    animationFrame = requestAnimationFrame(() => {
+        if (!demoRunning) {
+            draw();
+        }
+    });
 }
 
 function getClickedNode(x, y) {
@@ -251,6 +378,7 @@ function updateInfoPanel() {
     if (selectedNode) {
         const nodeData = topologyData.nodes[selectedNode];
         if (nodeData) {
+            const conn = nodeData.connectivity || {};
             html += `
                 <div class="info-section">
                     <h4>[Selected Node]</h4>
@@ -266,6 +394,11 @@ function updateInfoPanel() {
                         <span class="info-label">Root:</span>
                         <span class="info-value">${nodeData.is_root ? 'Yes' : 'No'}</span>
                     </div>
+                    <div class="info-row">
+                        <span class="info-label">Reachable:</span>
+                        <span class="info-value" style="color: ${conn.reachable || conn.is_root ? '#44ff44' : '#ff4444'}">${conn.reachable || conn.is_root ? 'Yes' : 'No'}</span>
+                    </div>
+                    ${conn.blocked_by && !conn.reachable ? `<div class="info-row"><span class="info-label">Blocked By:</span><span class="info-value">${conn.blocked_by}</span></div>` : ''}
                 </div>
             `;
         }

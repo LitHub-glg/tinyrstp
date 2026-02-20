@@ -145,11 +145,96 @@ class Topology:
             return True
         return False
 
+    def check_connectivity_to_root(self, node: Node) -> dict:
+        """
+        Check if a node can reach the root node.
+        Returns dict with 'reachable', 'path', and 'blocked_by' keys.
+        """
+        if not self.root_node:
+            return {'reachable': False, 'path': [], 'blocked_by': 'no_root'}
+        
+        if node.id == self.root_node.id:
+            return {'reachable': True, 'path': [], 'blocked_by': None}
+        
+        if node.state == NodeState.FAILED:
+            return {'reachable': False, 'path': [], 'blocked_by': 'node_failed'}
+        
+        visited = set()
+        queue = [(node.id, [])]
+        
+        while queue:
+            current_id, path = queue.pop(0)
+            
+            if current_id in visited:
+                continue
+            visited.add(current_id)
+            
+            if current_id == self.root_node.id:
+                return {'reachable': True, 'path': path, 'blocked_by': None}
+            
+            current_node = self.nodes.get(current_id)
+            if not current_node or current_node.state == NodeState.FAILED:
+                continue
+            
+            for link in self.links.values():
+                n1_id, n2_id = link.get_connected_nodes()
+                
+                neighbor_id = None
+                if n1_id == current_id and n2_id not in visited:
+                    neighbor_id = n2_id
+                elif n2_id == current_id and n1_id not in visited:
+                    neighbor_id = n1_id
+                
+                if neighbor_id:
+                    neighbor_node = self.nodes.get(neighbor_id)
+                    
+                    if not link.is_up():
+                        continue
+                    
+                    if neighbor_node and neighbor_node.state == NodeState.ACTIVE:
+                        new_path = path + [{
+                            'link_id': link.link_id,
+                            'link_state': link.state.value,
+                            'from_node': current_id,
+                            'to_node': neighbor_id
+                        }]
+                        queue.append((neighbor_id, new_path))
+        
+        return {'reachable': False, 'path': [], 'blocked_by': 'no_path'}
+    
+    def get_all_connectivity(self) -> dict:
+        """
+        Get connectivity status for all nodes to the root.
+        """
+        connectivity = {}
+        for node_id, node in self.nodes.items():
+            if node.id != (self.root_node.id if self.root_node else None):
+                connectivity[node_id] = self.check_connectivity_to_root(node)
+        return connectivity
+    
     def to_dict(self) -> dict:
+        connectivity = self.get_all_connectivity()
+        
+        nodes_dict = {}
+        for n in self.nodes.values():
+            node_data = n.to_dict()
+            if n.id in connectivity:
+                node_data['connectivity'] = connectivity[n.id]
+            elif self.root_node and n.id == self.root_node.id:
+                node_data['connectivity'] = {'reachable': True, 'path': [], 'blocked_by': None, 'is_root': True}
+            else:
+                node_data['connectivity'] = {'reachable': False, 'path': [], 'blocked_by': 'no_root'}
+            nodes_dict[n.id] = node_data
+        
         return {
-            'nodes': {n.id: n.to_dict() for n in self.nodes.values()},
+            'nodes': nodes_dict,
             'links': {l.link_id: l.to_dict() for l in self.links.values()},
             'spanning_tree': list(self.spanning_tree_links),
             'root_node': self.root_node.id if self.root_node else None,
-            'last_update': self.last_update_time
+            'last_update': self.last_update_time,
+            'connectivity_summary': {
+                'total_nodes': len(self.nodes),
+                'reachable_nodes': sum(1 for c in connectivity.values() if c['reachable']),
+                'unreachable_nodes': sum(1 for c in connectivity.values() if not c['reachable'])
+            }
         }

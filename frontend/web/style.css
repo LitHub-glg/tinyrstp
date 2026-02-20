@@ -61,6 +61,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    overflow-y: auto;
 }
 
 .chart-area {
@@ -143,39 +144,102 @@ body {
 .btn-info { background: #44aaff; color: #000; }
 .btn-purple { background: #aa44ff; color: #fff; }
 
-.legend-area, .info-area, .demo-status-area {
+.legend-area, .info-area, .demo-status-area, .connectivity-area {
     background: #0d1b2a;
     border-radius: 10px;
     border: 1px solid #333;
-    padding: 15px;
+    padding: 12px;
 }
 
-.legend-area h3, .info-area h3, .demo-status-area h3 {
-    font-size: 1rem;
+.legend-area h3, .info-area h3, .demo-status-area h3, .connectivity-area h3 {
+    font-size: 0.95rem;
     color: #4fc3f7;
     margin-bottom: 10px;
     border-bottom: 1px solid #333;
     padding-bottom: 5px;
 }
 
+.legend-section {
+    margin-bottom: 10px;
+}
+
+.legend-section:last-child {
+    margin-bottom: 0;
+}
+
+.legend-section h4 {
+    font-size: 0.75rem;
+    color: #888;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
 .legend-items {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 5px;
 }
 
 .legend-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 0.85rem;
+    gap: 8px;
+    font-size: 0.8rem;
 }
 
 .legend-color {
-    width: 20px;
-    height: 20px;
-    border-radius: 4px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
     border: 1px solid #555;
+    flex-shrink: 0;
+}
+
+.legend-line {
+    width: 24px;
+    height: 4px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.legend-indicator {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.reachable-indicator {
+    background: transparent;
+    border-color: #44ff44;
+}
+
+.reachable-indicator::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 10px;
+    color: #44ff44;
+}
+
+.unreachable-indicator {
+    background: transparent;
+    border-color: #ff4444;
+}
+
+.unreachable-indicator::after {
+    content: '✗';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 10px;
+    color: #ff4444;
 }
 
 .normal-node { background: #4488ff; }
@@ -184,7 +248,60 @@ body {
 .st-link { background: #44ff44; }
 .backup-link { background: #cccccc; }
 .failed-link { background: #888888; }
-.selected-item { background: #ffff00; }
+.selected-link { background: #ffff00; }
+
+.connectivity-area {
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+#connectivityContent {
+    font-size: 0.8rem;
+    line-height: 1.5;
+}
+
+#connectivityContent .placeholder {
+    color: #666;
+    font-style: italic;
+}
+
+#connectivityContent .connectivity-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    border-bottom: 1px solid #222;
+}
+
+#connectivityContent .connectivity-item:last-child {
+    border-bottom: none;
+}
+
+#connectivityContent .node-name {
+    font-weight: bold;
+    color: #4fc3f7;
+    min-width: 60px;
+}
+
+#connectivityContent .conn-status {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+#connectivityContent .conn-status.reachable {
+    color: #44ff44;
+}
+
+#connectivityContent .conn-status.unreachable {
+    color: #ff4444;
+}
+
+#connectivityContent .conn-reason {
+    color: #888;
+    font-size: 0.75rem;
+    margin-left: auto;
+}
 
 .info-area {
     flex: 1;
@@ -240,7 +357,7 @@ body {
 }
 
 .demo-status-area {
-    min-height: 150px;
+    min-height: 120px;
 }
 
 #demoStatus {

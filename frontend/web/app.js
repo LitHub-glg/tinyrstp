@@ -4,6 +4,8 @@ let topologyData = null;
 let selectedNode = null;
 let selectedLink = null;
 let nodePositions = {};
+let demoRunning = false;
+let demoSteps = [];
 
 const canvas = document.getElementById('networkCanvas');
 const ctx = canvas.getContext('2d');
@@ -175,8 +177,8 @@ function drawNodes() {
         ctx.textBaseline = 'middle';
         
         const nodeName = nodeData.node_name || '';
-        const state = nodeData.state === 'ACTIVE' ? '✓' : '✗';
-        const rootLabel = isRoot ? ' (Root)' : '';
+        const state = nodeData.state === 'ACTIVE' ? 'OK' : 'FL';
+        const rootLabel = isRoot ? ' (R)' : '';
         
         ctx.fillText(nodeName, pos.x, pos.y - 8);
         ctx.font = '10px Arial';
@@ -321,35 +323,195 @@ async function apiCall(method, endpoint) {
     }
 }
 
-document.getElementById('btnToggle').addEventListener('click', () => {
+function findLinkByNodes(node1Name, node2Name) {
+    for (const [linkId, linkData] of Object.entries(topologyData.links || {})) {
+        const nodes = linkData.nodes;
+        if (nodes.length < 2) continue;
+        const n1 = topologyData.nodes[nodes[0]];
+        const n2 = topologyData.nodes[nodes[1]];
+        if (n1 && n2) {
+            if ((n1.node_name === node1Name && n2.node_name === node2Name) ||
+                (n1.node_name === node2Name && n2.node_name === node1Name)) {
+                return linkId;
+            }
+        }
+    }
+    return null;
+}
+
+function findNodeByName(nodeName) {
+    for (const [nodeId, nodeData] of Object.entries(topologyData.nodes || {})) {
+        if (nodeData.node_name === nodeName) {
+            return nodeId;
+        }
+    }
+    return null;
+}
+
+// Link Control Buttons
+document.getElementById('btnLinkDown').addEventListener('click', () => {
+    if (selectedLink) apiCall('POST', `/api/links/${selectedLink}/down`);
+    else alert('Please select a link first');
+});
+
+document.getElementById('btnLinkUp').addEventListener('click', () => {
+    if (selectedLink) apiCall('POST', `/api/links/${selectedLink}/up`);
+    else alert('Please select a link first');
+});
+
+document.getElementById('btnLinkToggle').addEventListener('click', () => {
     if (selectedLink) apiCall('POST', `/api/links/${selectedLink}/toggle`);
+    else alert('Please select a link first');
 });
 
-document.getElementById('btnFail').addEventListener('click', () => {
+// Node Control Buttons
+document.getElementById('btnNodeFail').addEventListener('click', () => {
     if (selectedNode) apiCall('POST', `/api/nodes/${selectedNode}/fail`);
+    else alert('Please select a node first');
 });
 
-document.getElementById('btnRecover').addEventListener('click', () => {
+document.getElementById('btnNodeRecover').addEventListener('click', () => {
     if (selectedNode) apiCall('POST', `/api/nodes/${selectedNode}/recover`);
+    else alert('Please select a node first');
 });
 
+// System Button
 document.getElementById('btnReset').addEventListener('click', () => {
     apiCall('POST', '/api/topology/reset');
 });
 
-document.getElementById('btnScenario1').addEventListener('click', () => {
-    apiCall('POST', '/api/test/scenario/link_failure');
+// Demo Button - Composite Failure Scenario
+document.getElementById('btnDemo').addEventListener('click', async () => {
+    if (demoRunning) return;
+    
+    demoRunning = true;
+    setButtonsDisabled(true);
+    setStatus('Demo Running...', 'demo');
+    
+    const demoStatusEl = document.getElementById('demoStatus');
+    const demoProgressEl = document.getElementById('demoProgress');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    
+    demoProgressEl.style.display = 'block';
+    
+    const steps = [
+        {
+            title: 'Step 1: Initial State',
+            desc: 'All nodes and links are operational. Network is stable.',
+            action: async () => {
+                await apiCall('POST', '/api/topology/reset');
+            },
+            expected: '4 active nodes, 6 UP links, spanning tree formed'
+        },
+        {
+            title: 'Step 2: Link Failure (Node1-Node2)',
+            desc: 'Injecting failure on the link between Node1 and Node2.',
+            action: async () => {
+                const linkId = findLinkByNodes('Node1', 'Node2');
+                if (linkId) await apiCall('POST', `/api/links/${linkId}/down`);
+            },
+            expected: 'Link goes DOWN, spanning tree recalculates'
+        },
+        {
+            title: 'Step 3: Node Failure (Node3)',
+            desc: 'Injecting failure on Node3. This affects multiple links.',
+            action: async () => {
+                const nodeId = findNodeByName('Node3');
+                if (nodeId) await apiCall('POST', `/api/nodes/${nodeId}/fail`);
+            },
+            expected: 'Node3 becomes FAILED, 3 links affected'
+        },
+        {
+            title: 'Step 4: Observe Network State',
+            desc: 'Network has adapted to failures. Remaining nodes stay connected.',
+            action: async () => {
+                await fetchTopology();
+            },
+            expected: '3 active nodes, spanning tree maintains connectivity'
+        },
+        {
+            title: 'Step 5: Recover Node3',
+            desc: 'Restoring Node3 to active state.',
+            action: async () => {
+                const nodeId = findNodeByName('Node3');
+                if (nodeId) await apiCall('POST', `/api/nodes/${nodeId}/recover`);
+            },
+            expected: 'Node3 recovers, links restored'
+        },
+        {
+            title: 'Step 6: Recover Link (Node1-Node2)',
+            desc: 'Restoring the link between Node1 and Node2.',
+            action: async () => {
+                const linkId = findLinkByNodes('Node1', 'Node2');
+                if (linkId) await apiCall('POST', `/api/links/${linkId}/up`);
+            },
+            expected: 'Link goes UP, spanning tree optimizes'
+        },
+        {
+            title: 'Step 7: Final State',
+            desc: 'All failures recovered. Network returns to optimal state.',
+            action: async () => {
+                await fetchTopology();
+            },
+            expected: '4 active nodes, 6 UP links, optimal spanning tree'
+        }
+    ];
+    
+    let html = '';
+    for (let i = 0; i < steps.length; i++) {
+        html += `
+            <div class="demo-step" id="demo-step-${i}">
+                <div class="step-title">${steps[i].title}</div>
+                <div class="step-desc">${steps[i].desc}</div>
+                <div class="step-result" id="step-result-${i}">Expected: ${steps[i].expected}</div>
+            </div>
+        `;
+    }
+    demoStatusEl.innerHTML = html;
+    
+    for (let i = 0; i < steps.length; i++) {
+        const stepEl = document.getElementById(`demo-step-${i}`);
+        stepEl.classList.add('active');
+        
+        progressFill.style.width = `${((i + 1) / steps.length) * 100}%`;
+        progressText.textContent = `Step ${i + 1}/${steps.length}`;
+        
+        await steps[i].action();
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        const resultEl = document.getElementById(`step-result-${i}`);
+        resultEl.textContent = 'Completed: ' + steps[i].expected;
+        
+        stepEl.classList.remove('active');
+        stepEl.classList.add('completed');
+    }
+    
+    progressFill.style.width = '100%';
+    progressText.textContent = 'Demo Complete!';
+    setStatus('Demo Complete', 'demo');
+    
+    setTimeout(() => {
+        demoRunning = false;
+        setButtonsDisabled(false);
+        setStatus('Ready');
+    }, 2000);
 });
 
-document.getElementById('btnScenario2').addEventListener('click', () => {
-    apiCall('POST', '/api/test/scenario/link_recovery');
-});
-
-document.getElementById('btnScenario3').addEventListener('click', () => {
-    apiCall('POST', '/api/test/scenario/node_failure');
-});
+function setButtonsDisabled(disabled) {
+    const buttons = document.querySelectorAll('.btn');
+    buttons.forEach(btn => {
+        if (btn.id !== 'btnDemo') {
+            btn.disabled = disabled;
+        }
+    });
+}
 
 resizeCanvas();
 fetchTopology();
 
-setInterval(fetchTopology, 5000);
+setInterval(() => {
+    if (!demoRunning) {
+        fetchTopology();
+    }
+}, 5000);

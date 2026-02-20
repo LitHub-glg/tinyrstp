@@ -1,2 +1,3 @@
 backend/logs/*.log
 frontend/logs/*.log
+logs

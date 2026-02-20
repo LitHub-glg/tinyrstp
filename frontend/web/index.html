@@ -19,16 +19,32 @@
                     <canvas id="networkCanvas"></canvas>
                 </div>
                 <div class="button-area">
-                    <div class="button-row">
-                        <button class="btn btn-warning" id="btnToggle">Toggle</button>
-                        <button class="btn btn-danger" id="btnFail">Fail</button>
-                        <button class="btn btn-success" id="btnRecover">Recover</button>
-                        <button class="btn btn-primary" id="btnReset">Reset</button>
+                    <div class="control-section">
+                        <h4>Link Control</h4>
+                        <div class="button-row">
+                            <button class="btn btn-warning" id="btnLinkDown" title="Set selected link DOWN">DN</button>
+                            <button class="btn btn-success" id="btnLinkUp" title="Set selected link UP">UP</button>
+                            <button class="btn btn-info" id="btnLinkToggle" title="Toggle link state">TG</button>
+                        </div>
                     </div>
-                    <div class="button-row">
-                        <button class="btn btn-orange" id="btnScenario1">S1:Link</button>
-                        <button class="btn btn-lime" id="btnScenario2">S2:LinkR</button>
-                        <button class="btn btn-pink" id="btnScenario3">S3:Node</button>
+                    <div class="control-section">
+                        <h4>Node Control</h4>
+                        <div class="button-row">
+                            <button class="btn btn-danger" id="btnNodeFail" title="Inject node failure">FL</button>
+                            <button class="btn btn-success" id="btnNodeRecover" title="Recover node">RC</button>
+                        </div>
+                    </div>
+                    <div class="control-section">
+                        <h4>System</h4>
+                        <div class="button-row">
+                            <button class="btn btn-primary" id="btnReset" title="Reset topology">RST</button>
+                        </div>
+                    </div>
+                    <div class="demo-section">
+                        <h4>Auto Demo</h4>
+                        <div class="button-row">
+                            <button class="btn btn-purple" id="btnDemo" title="Run composite failure demo">DEMO</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -80,6 +96,19 @@
                         <li>Use buttons to control</li>
                         <li>Yellow highlight = selected</li>
                     </ul>
+                </div>
+                
+                <div class="demo-status-area">
+                    <h3>Demo Status</h3>
+                    <div id="demoStatus">
+                        <p class="placeholder">Click DEMO to start auto demonstration</p>
+                    </div>
+                    <div id="demoProgress" class="demo-progress" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <span id="progressText">Step 0/0</span>
+                    </div>
                 </div>
             </div>
         </div>

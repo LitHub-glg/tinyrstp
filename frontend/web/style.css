@@ -83,29 +83,42 @@ body {
     background: #0d1b2a;
     border-radius: 10px;
     border: 1px solid #333;
-    padding: 15px;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.control-section, .demo-section {
+    background: #1a1a2e;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.control-section h4, .demo-section h4 {
+    font-size: 0.75rem;
+    color: #4fc3f7;
+    margin-bottom: 8px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .button-row {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     justify-content: center;
-    margin-bottom: 8px;
-}
-
-.button-row:last-child {
-    margin-bottom: 0;
 }
 
 .btn {
-    padding: 8px 16px;
+    padding: 8px 12px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: bold;
     transition: all 0.2s ease;
-    min-width: 70px;
+    min-width: 45px;
 }
 
 .btn:hover {
@@ -117,22 +130,27 @@ body {
     transform: translateY(0);
 }
 
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
 .btn-warning { background: #ffaa44; color: #000; }
 .btn-danger { background: #ff4444; color: #fff; }
 .btn-success { background: #44ff44; color: #000; }
 .btn-primary { background: #4488ff; color: #fff; }
-.btn-orange { background: #ff8844; color: #000; }
-.btn-lime { background: #88ff44; color: #000; }
-.btn-pink { background: #ff4488; color: #fff; }
+.btn-info { background: #44aaff; color: #000; }
+.btn-purple { background: #aa44ff; color: #fff; }
 
-.legend-area, .info-area {
+.legend-area, .info-area, .demo-status-area {
     background: #0d1b2a;
     border-radius: 10px;
     border: 1px solid #333;
     padding: 15px;
 }
 
-.legend-area h3, .info-area h3 {
+.legend-area h3, .info-area h3, .demo-status-area h3 {
     font-size: 1rem;
     color: #4fc3f7;
     margin-bottom: 10px;
@@ -221,6 +239,79 @@ body {
     margin-bottom: 5px;
 }
 
+.demo-status-area {
+    min-height: 150px;
+}
+
+#demoStatus {
+    font-size: 0.85rem;
+    line-height: 1.6;
+}
+
+#demoStatus .placeholder {
+    color: #666;
+    font-style: italic;
+}
+
+#demoStatus .demo-step {
+    margin-bottom: 8px;
+    padding: 8px;
+    background: #1a1a2e;
+    border-radius: 5px;
+    border-left: 3px solid #4fc3f7;
+}
+
+#demoStatus .demo-step.active {
+    border-left-color: #44ff44;
+    background: #1a2e1a;
+}
+
+#demoStatus .demo-step.completed {
+    border-left-color: #888;
+    opacity: 0.7;
+}
+
+#demoStatus .step-title {
+    color: #4fc3f7;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+#demoStatus .step-desc {
+    color: #aaa;
+    font-size: 0.8rem;
+}
+
+#demoStatus .step-result {
+    color: #44ff44;
+    font-size: 0.8rem;
+    margin-top: 4px;
+}
+
+.demo-progress {
+    margin-top: 10px;
+}
+
+.progress-bar {
+    height: 8px;
+    background: #1a1a2e;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 5px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4488ff, #44ff44);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+#progressText {
+    font-size: 0.75rem;
+    color: #888;
+}
+
 .status-bar {
     display: flex;
     justify-content: space-between;
@@ -245,6 +336,10 @@ body {
     color: #ffaa44;
 }
 
+#statusText.demo {
+    color: #aa44ff;
+}
+
 @media (max-width: 900px) {
     .main-content {
         grid-template-columns: 1fr;
@@ -258,5 +353,9 @@ body {
     
     .chart-area {
         min-height: 400px;
+    }
+    
+    .button-area {
+        grid-template-columns: repeat(2, 1fr);
     }
 }

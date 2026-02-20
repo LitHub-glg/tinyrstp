@@ -32,6 +32,7 @@ class NetworkGUI:
         self.ax_main = None
         self.ax_controls = None
         self.ax_info = None
+        self.ax_legend = None
         self.pos = None
         self.selected_link = None
         self.selected_node = None
@@ -41,11 +42,15 @@ class NetworkGUI:
     def setup(self):
         self.logger.gui_event('setup_start')
         self.fig = plt.figure(figsize=(14, 10))
-        gs = self.fig.add_gridspec(3, 3, hspace=0.3, wspace=0.25)
+        gs = self.fig.add_gridspec(2, 2, hspace=0.15, wspace=0.15,
+                                    height_ratios=[2, 1], width_ratios=[2, 1])
 
-        self.ax_main = self.fig.add_subplot(gs[:, 0:2])
-        self.ax_controls = self.fig.add_subplot(gs[0, 2])
-        self.ax_info = self.fig.add_subplot(gs[1:, 2])
+        self.ax_main = self.fig.add_subplot(gs[0, 0])
+        self.ax_legend = self.fig.add_subplot(gs[0, 1])
+        self.ax_controls = self.fig.add_subplot(gs[1, 0])
+        self.ax_info = self.fig.add_subplot(gs[1, 1])
+
+        self.ax_legend.axis('off')
         self.ax_controls.axis('off')
         self.ax_info.axis('off')
 
@@ -54,26 +59,36 @@ class NetworkGUI:
         self.logger.gui_event('setup_complete')
 
     def _create_buttons(self):
-        button_y = 0.92
-        button_height = 0.06
-        button_spacing = 0.08
+        button_width = 0.03
+        button_height = 0.015
+        button_x_start = 0.05
+        button_y_start = 0.28
+        button_spacing_x = 0.035
+        button_spacing_y = 0.022
 
         controls = [
-            ('toggle_link', 'Toggle Link State', '#ffaa44'),
-            ('fail_node', 'Node Failure', '#ff4444'),
-            ('recover_node', 'Node Recovery', '#44ff44'),
-            ('reset', 'Reset Topology', '#4488ff'),
-            ('scenario1', 'Scenario 1: Link Failure', '#ff8844'),
-            ('scenario2', 'Scenario 2: Link Recovery', '#88ff44'),
-            ('scenario3', 'Scenario 3: Node Failure', '#ff4488'),
+            ('toggle_link', 'Toggle', '#ffaa44'),
+            ('fail_node', 'Fail', '#ff4444'),
+            ('recover_node', 'Recover', '#44ff44'),
+            ('reset', 'Reset', '#4488ff'),
+            ('scenario1', 'S1:Link', '#ff8844'),
+            ('scenario2', 'S2:LinkR', '#88ff44'),
+            ('scenario3', 'S3:Node', '#ff4488'),
         ]
 
-        for btn_id, label, color in controls:
-            ax_btn = self.fig.add_axes([0.70, button_y, 0.27, button_height])
+        current_x = button_x_start
+        current_y = button_y_start
+
+        for i, (btn_id, label, color) in enumerate(controls):
+            ax_btn = self.fig.add_axes([current_x, current_y, button_width, button_height])
             btn = widgets.Button(ax_btn, label, color=color)
+            btn.label.set_fontsize(6)
             btn.on_clicked(self._get_button_handler(btn_id))
             self.buttons[btn_id] = btn
-            button_y -= button_spacing
+            current_x += button_spacing_x
+            if i == 3:
+                current_x = button_x_start
+                current_y -= button_spacing_y
 
     def _get_button_handler(self, btn_id: str):
         def handler(event):
@@ -248,12 +263,15 @@ class NetworkGUI:
         self._draw_legend()
         self._update_info()
 
-        self.ax_main.set_title("Dynamic Self-Healing Loop-Free Network Based on LACP & BPDU Collaboration", fontsize=16, fontweight='bold')
+        self.ax_main.set_title("Dynamic Self-Healing Loop-Free Network", fontsize=14, fontweight='bold')
         self.ax_main.axis('off')
 
         plt.draw()
 
     def _draw_legend(self):
+        self.ax_legend.clear()
+        self.ax_legend.axis('off')
+
         legend_elements = [
             mpatches.Patch(color='#4488ff', label='Normal Node'),
             mpatches.Patch(color='#44ff44', label='Root Node'),
@@ -263,23 +281,23 @@ class NetworkGUI:
             mpatches.Patch(color='#888888', label='Failed Link'),
             mpatches.Patch(color='#ffff00', label='Selected Item')
         ]
-        self.ax_main.legend(handles=legend_elements, loc='upper right',
-                           bbox_to_anchor=(1.02, 1), fontsize=10)
+        self.ax_legend.legend(handles=legend_elements, loc='center',
+                              fontsize=10, title='Legend')
 
     def _update_info(self):
         self.ax_info.clear()
         self.ax_info.axis('off')
 
-        info_text = "=" * 30 + "\n"
-        info_text += "         Information Panel\n"
-        info_text += "=" * 30 + "\n\n"
+        info_text = "=" * 25 + "\n"
+        info_text += "    Information Panel\n"
+        info_text += "=" * 25 + "\n\n"
 
         if self.selected_node:
             node_data = self.topology_data.get('nodes', {}).get(self.selected_node, {})
             info_text += f"[Selected Node]\n"
             info_text += f"  Name: {node_data.get('node_name', '?')}\n"
             info_text += f"  State: {node_data.get('state', '?')}\n"
-            info_text += f"  Root Node: {'Yes' if node_data.get('is_root') else 'No'}\n\n"
+            info_text += f"  Root: {'Yes' if node_data.get('is_root') else 'No'}\n\n"
 
         if self.selected_link:
             link_data = self.topology_data.get('links', {}).get(self.selected_link, {})
@@ -290,21 +308,20 @@ class NetworkGUI:
                 info_text += f"[Selected Link]\n"
                 info_text += f"  {n1_data.get('node_name', '?')} <-> {n2_data.get('node_name', '?')}\n"
                 info_text += f"  State: {link_data.get('state', '?')}\n"
-                info_text += f"  Bandwidth: {link_data.get('bandwidth', 0)} Mbps\n"
+                info_text += f"  BW: {link_data.get('bandwidth', 0)} Mbps\n"
                 is_st = self.selected_link in self.topology_data.get('spanning_tree', [])
-                info_text += f"  Spanning Tree: {'Yes' if is_st else 'No'}\n\n"
+                info_text += f"  ST: {'Yes' if is_st else 'No'}\n\n"
 
-        info_text += "=" * 30 + "\n"
-        info_text += "         Instructions\n"
-        info_text += "=" * 30 + "\n"
+        info_text += "=" * 25 + "\n"
+        info_text += "    Instructions\n"
+        info_text += "=" * 25 + "\n"
         info_text += "• Click node/link to select\n"
-        info_text += "• Use buttons on right panel\n"
-        info_text += "• Yellow highlight means selected\n"
+        info_text += "• Yellow = selected\n"
 
-        self.ax_info.text(0.02, 0.98, info_text,
+        self.ax_info.text(0.05, 0.95, info_text,
                          transform=self.ax_info.transAxes,
                          verticalalignment='top',
-                         fontsize=11,
+                         fontsize=9,
                          family='monospace')
 
     def run(self):

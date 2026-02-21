@@ -1,4 +1,4 @@
-# 前后端分离架构设计
+# 浏览器前端架构设计
 
 ## 项目结构
 
@@ -6,29 +6,27 @@
 solo_cpc/
 ├── backend/                    # 后端服务
 │   ├── core/                 # 核心业务逻辑
-│   │   ├── node.py           # 节点类
+│   │   ├── node.py           # 节点类（增量ID: node_1, node_2...）
 │   │   ├── link.py           # 链路类
-│   │   ├── topology.py       # 拓扑管理
+│   │   ├── topology.py       # 拓扑管理（含连通性检测）
 │   │   ├── stp.py           # 生成树计算
 │   │   ├── lacp.py          # LACP探测
 │   │   └── bpdu.py          # BPDU协议
 │   ├── api/                  # API接口层
-│   │   └── app.py           # Flask应用（包含路由定义）
+│   │   └── app.py           # Flask应用（含CORS支持）
+│   ├── utils/                # 工具模块
+│   │   └── logger.py        # 日志记录
 │   ├── tests/                # 后端测试
-│   │   ├── test_core.py      # 核心逻辑测试（7个测试用例）
-│   │   └── test_api.py       # API接口测试（14个测试用例）
+│   │   ├── test_core.py      # 核心逻辑测试
+│   │   └── test_api.py       # API接口测试
 │   └── main.py              # 后端启动入口
 │
 ├── frontend/                 # 前端应用
-│   ├── gui/                 # GUI界面
-│   │   ├── main.py          # 主界面（包含可视化组件）
-│   │   └── client.py       # API客户端（打桩接口）
-│   ├── tests/                # 前端测试
-│   │   ├── test_client.py   # 客户端测试（16个测试用例）
-│   │   └── test_gui.py      # GUI组件测试（14个测试用例）
-│   ├── debug_gui.py         # GUI调试工具
-│   ├── test_gui_offline.py  # GUI离线测试
-│   └── main.py              # 前端启动入口
+│   └── web/                 # 浏览器前端
+│       ├── index.html       # 主页面（2x2网格布局）
+│       ├── style.css        # 样式表
+│       ├── app.js           # 应用逻辑（Canvas渲染）
+│       └── server.py        # 静态文件服务器（可选）
 │
 ├── requirements.txt           # 依赖包
 ├── README.md               # 项目说明
@@ -37,7 +35,66 @@ solo_cpc/
 
 ## 架构设计
 
-### 1. 后端架构
+### 1. 整体架构
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Frontend (Browser)                        │
+├─────────────────────────────────────────────────────────────┤
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │   Presentation Layer (HTML5 + CSS3)                   │  │
+│  │   - 2x2 Grid Layout                                   │  │
+│  │   - Control Panel (Link/Node/System)                  │  │
+│  │   - Demo Panel (Auto Demo)                            │  │
+│  │   - Legend & Connectivity Status                      │  │
+│  └──────────────────────┬────────────────────────────────┘  │
+│                         │                                    │
+│  ┌──────────────────────▼────────────────────────────────┐  │
+│  │   Visualization Layer (HTML5 Canvas)                  │  │
+│  │   - Network Topology Rendering                        │  │
+│  │   - Node/Link State Visualization                     │  │
+│  │   - Connectivity Indicators (✓/✗)                     │  │
+│  │   - Selection Highlight                               │  │
+│  └──────────────────────┬────────────────────────────────┘  │
+│                         │                                    │
+│  ┌──────────────────────▼────────────────────────────────┐  │
+│  │   Application Logic (JavaScript)                      │  │
+│  │   - API Communication (fetch)                         │  │
+│  │   - Event Handling                                    │  │
+│  │   - Animation Loop (requestAnimationFrame)            │  │
+│  └──────────────────────┬────────────────────────────────┘  │
+│                         │ HTTP/JSON (CORS)                   │
+└─────────────────────────┼───────────────────────────────────┘
+                          │
+┌─────────────────────────▼───────────────────────────────────┐
+│                    Backend (Flask REST API)                  │
+├─────────────────────────────────────────────────────────────┤
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │   API Layer (Flask + CORS)                            │  │
+│  │   - REST Endpoints                                    │  │
+│  │   - JSON Serialization                                │  │
+│  └──────────────────────┬────────────────────────────────┘  │
+│                         │                                    │
+│  ┌──────────────────────▼────────────────────────────────┐  │
+│  │   Core Business Logic                                 │  │
+│  │   - Node Management (Incremental ID: node_1, node_2)  │  │
+│  │   - Link Management                                   │  │
+│  │   - Topology Control                                  │  │
+│  │   - STP Calculation (Spanning Tree Protocol)          │  │
+│  │   - LACP Detection                                    │  │
+│  │   - BPDU Protocol                                     │  │
+│  │   - Connectivity Detection (BFS-based)                │  │
+│  └──────────────────────┬────────────────────────────────┘  │
+│                         │                                    │
+│  ┌──────────────────────▼────────────────────────────────┐  │
+│  │   Test Suite                                          │  │
+│  │   - Unit Tests (test_core.py)                         │  │
+│  │   - Integration Tests (test_api.py)                   │  │
+│  └───────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 2. 后端架构
 
 ```
 ┌─────────────────────────────────────────┐
@@ -48,6 +105,7 @@ solo_cpc/
 │  │   API Layer (Flask)      │    │
 │  │   - REST API             │    │
 │  │   - JSON Response         │    │
+│  │   - CORS Support         │    │
 │  │   - Route Definitions    │    │
 │  └──────────┬──────────────────┘    │
 │             │                         │
@@ -59,17 +117,18 @@ solo_cpc/
 │  │   - STP Calculation     │    │
 │  │   - LACP Detection      │    │
 │  │   - BPDU Protocol       │    │
+│  │   - Connectivity Detection  │    │
 │  └────────────────────────────┘    │
 │                                   │
 │  ┌─────────────────────────────┐    │
 │  │   Test Suite              │    │
-│  │   - Unit Tests (7)        │    │
-│  │   - Integration Tests (14) │    │
+│  │   - Unit Tests           │    │
+│  │   - Integration Tests     │    │
 │  └────────────────────────────┘    │
 └─────────────────────────────────────────┘
 ```
 
-### 2. 前端架构
+### 3. 前端架构
 
 ```
 ┌─────────────────────────────────────────┐
@@ -77,25 +136,27 @@ solo_cpc/
 ├─────────────────────────────────────────┤
 │                                   │
 │  ┌─────────────────────────────┐    │
-│  │   GUI Layer              │    │
-│  │   - Network Visualization  │    │
-│  │   - Control Panel        │    │
-│  │   - Info Display        │    │
-│  │   - Interactive Buttons  │    │
+│  │   Presentation Layer       │    │
+│  │   - HTML5 Structure        │    │
+│  │   - CSS3 Styling          │    │
+│  │   - 2x2 Grid Layout       │    │
+│  │   - Responsive Design     │    │
 │  └──────────┬──────────────────┘    │
 │             │                         │
 │  ┌──────────▼──────────────────┐    │
-│  │   Client Layer (Stub)      │    │
-│  │   - API Client           │    │
-│  │   - Mock Interface      │    │
-│  │   - Test Automation     │    │
+│  │   Canvas Layer            │    │
+│  │   - Network Rendering      │    │
+│  │   - Node/Link Drawing     │    │
+│  │   - Connectivity Indicators │    │
+│  │   - Animation Loop        │    │
 │  └──────────┬──────────────────┘    │
 │             │                         │
 │  ┌──────────▼──────────────────┐    │
-│  │   Test Suite              │    │
-│  │   - GUI Tests (14)        │    │
-│  │   - Client Tests (16)     │    │
-│  │   - E2E Tests            │    │
+│  │   Logic Layer             │    │
+│  │   - API Communication      │    │
+│  │   - Event Handling        │    │
+│  │   - State Management      │    │
+│  │   - Auto Demo             │    │
 │  └────────────────────────────┘    │
 └─────────────────────────────────────────┘
 ```
@@ -106,7 +167,7 @@ solo_cpc/
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | /api/topology | 获取完整拓扑 |
+| GET | /api/topology | 获取完整拓扑（含连通性信息） |
 | POST | /api/topology/reset | 重置拓扑 |
 | GET | /api/topology/nodes | 获取所有节点 |
 | GET | /api/topology/links | 获取所有链路 |
@@ -143,48 +204,119 @@ solo_cpc/
 | GET | /api/debug/links/{link_id} | 获取链路详细信息 |
 | GET | /api/debug/logs | 获取最近日志内容 |
 
+### 连通性检测API
+
+拓扑数据中包含连通性信息，通过 `GET /api/topology` 返回的数据结构：
+
+```json
+{
+  "nodes": {
+    "node_1": {
+      "node_id": "node_1",
+      "node_name": "Node1",
+      "state": "ACTIVE",
+      "is_root": true,
+      "connectivity": {
+        "reachable": true,
+        "path": [],
+        "blocked_by": null,
+        "is_root": true
+      }
+    },
+    "node_2": {
+      "connectivity": {
+        "reachable": true,
+        "path": [...],
+        "blocked_by": null
+      }
+    }
+  },
+  "connectivity_summary": {
+    "total_nodes": 4,
+    "reachable_nodes": 3,
+    "unreachable_nodes": 1
+  }
+}
+```
+
+## 连通性检测机制
+
+### 检测算法
+
+采用**广度优先搜索（BFS）**算法检测各节点到根节点的连通性：
+
+```
+check_connectivity_to_root(node):
+    1. 检查根节点是否存在
+    2. 检查目标节点是否为根节点
+    3. 检查目标节点是否已失败
+    4. BFS遍历寻找到根节点的路径
+       - 只遍历活跃节点
+       - 只遍历UP状态的链路
+    5. 返回结果：
+       - reachable: 是否可达
+       - path: 路径信息
+       - blocked_by: 阻塞原因
+```
+
+### 阻塞原因类型
+
+| 原因 | 说明 |
+|------|------|
+| no_root | 网络中没有根节点 |
+| node_failed | 目标节点已失败 |
+| no_path | 无法找到到根节点的路径 |
+
+### 可视化展示
+
+- **节点上方指示器**：
+  - 绿色圆圈 + ✓：可达根节点
+  - 红色圆圈 + ✗：不可达根节点
+- **右侧状态面板**：显示所有节点的详细连通状态
+
 ## 测试策略
 
 ### 后端测试
 
 1. **单元测试**：测试核心业务逻辑（test_core.py）
-   - Node类测试（4个测试用例）
-   - Link类测试（3个测试用例）
-   - 总计：7个测试用例
+   - Node类测试
+   - Link类测试
+   - Topology类测试
 
 2. **集成测试**：测试API接口（test_api.py）
-   - 拓扑管理API（5个测试用例）
-   - 节点操作API（2个测试用例）
-   - 链路操作API（3个测试用例）
-   - 测试场景API（4个测试用例）
-   - 总计：14个测试用例
+   - 拓扑管理API
+   - 节点操作API
+   - 链路操作API
+   - 测试场景API
 
-**后端总计**：21个测试用例
+### 测试执行
 
-### 前端测试
+```bash
+# 后端测试
+cd backend/tests
+python3 -m pytest test_core.py -v
+python3 -m pytest test_api.py -v
+python3 -m pytest -v  # 运行所有后端测试
+```
 
-1. **客户端测试**：测试API客户端和自动化场景（test_client.py）
-   - API客户端方法测试（12个测试用例）
-   - 自动化场景测试（4个测试用例）
-   - 总计：16个测试用例
+**注意**：如果系统中没有安装pytest，请先安装：
+```bash
+pip3 install pytest
+```
 
-2. **GUI组件测试**：测试GUI组件（test_gui.py）
-   - GUI初始化测试（2个测试用例）
-   - GUI按钮测试（2个测试用例）
-   - GUI功能测试（10个测试用例）
-   - 总计：14个测试用例
+### 测试警告说明
 
-**前端总计**：30个测试用例
+运行测试时可能会遇到以下警告，但不影响功能：
 
-### 测试覆盖
+#### urllib3 SSL版本警告
 
-| 模块 | 测试文件 | 测试用例数 | 状态 |
-|------|---------|----------|------|
-| 后端核心逻辑 | test_core.py | 7 | ✅ 全部通过 |
-| 后端API接口 | test_api.py | 14 | ✅ 全部通过 |
-| 前端API客户端 | test_client.py | 16 | ✅ 全部通过 |
-| 前端GUI组件 | test_gui.py | 14 | ✅ 全部通过 |
-| **总计** | **4个文件** | **51个** | **✅ 100%通过** |
+```
+NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+
+```
+
+- **原因**：macOS系统使用LibreSSL而非OpenSSL
+- **影响**：⚠️ 不影响功能
+- **解决方案**：可忽略或升级OpenSSL
 
 ## 运行方式
 
@@ -198,133 +330,83 @@ python3 main.py
 
 ### 前端应用
 
-```bash
-cd frontend
-python3 main.py
-# 启动GUI界面，连接后端API
-```
+#### 方式一：直接打开HTML文件
 
-### Mock模式（打桩接口）
+在浏览器中直接打开 `frontend/web/index.html` 文件。
+
+#### 方式二：使用Python简易服务器
 
 ```bash
-cd frontend
-python3 main.py --mock
-# 使用Mock模式，不依赖后端服务
+cd frontend/web
+python3 -m http.server 8080
+# 访问 http://localhost:8080
 ```
 
-### 测试执行
+#### 方式三：使用Flask静态文件服务器
 
 ```bash
-# 后端测试
-cd backend/tests
-python3 -m pytest test_core.py -v
-python3 -m pytest test_api.py -v
-python3 -m pytest -v  # 运行所有后端测试
-
-# 前端测试
-cd frontend/tests
-python3 -m pytest test_client.py -v
-python3 -m pytest test_gui.py -v
-python3 -m pytest -v  # 运行所有前端测试
+cd frontend/web
+python3 server.py
+# 访问 http://localhost:8080
 ```
 
-**注意**：如果系统中没有安装pytest，请先安装：
-```bash
-pip3 install pytest
-```
+## 前端实现细节
 
-## GUI实现细节
-
-### GUI组件架构
+### 页面布局（2x2网格）
 
 ```
-NetworkGUI (frontend/gui/main.py)
-├── setup()                    # 初始化GUI布局
-│   ├── 创建主绘图区域
-│   ├── 创建控制面板
-│   ├── 创建信息面板
-│   ├── 创建交互按钮
-│   └── 注册事件处理器
-│
-├── draw()                     # 绘制网络拓扑
-│   ├── 绘制节点
-│   ├── 绘制链路
-│   ├── 绘制标签
-│   ├── 绘制图例
-│   └── 更新信息面板
-│
-├── _refresh_topology()        # 刷新拓扑数据
-│   ├── 调用API获取数据
-│   └── 更新布局位置
-│
-├── _on_click()               # 处理点击事件
-│   ├── 识别点击的节点
-│   ├── 识别点击的链路
-│   └── 更新选中状态
-│
-└── _handle_button()          # 处理按钮事件
-    ├── 切换链路状态
-    ├── 节点故障/恢复
-    ├── 重置拓扑
-    └── 执行测试场景
+┌─────────────────────────────┬─────────────────────────────┐
+│                             │           Legend            │
+│      Network Canvas         │     (Nodes & Links)         │
+│    (HTML5 Canvas)           ├─────────────────────────────┤
+│                             │     Connectivity Status     │
+│                             ├─────────────────────────────┤
+├─────────────────────────────┤     Information Panel       │
+│    Control Buttons          ├─────────────────────────────┤
+│  (Link/Node/System/Demo)    │       Demo Status           │
+└─────────────────────────────┴─────────────────────────────┘
 ```
 
-### GUI显示修复
+### Canvas渲染架构
 
-**问题**：GUI窗口打开但无内容显示
-
-**原因**：`run()` 方法中调用 `_refresh_topology()` 后未调用 `draw()` 绘制图形
-
-**修复**：在 `run()` 方法中添加 `self.draw()` 调用
-
-```python
-def run(self):
-    print("=" * 60)
-    print("基于LACP与BPDU协同探测的动态自愈无环网络 - GUI模式")
-    print("=" * 60)
-    print("\n正在初始化GUI...")
-    self.setup()
-    print("正在连接后端API...")
-    self._refresh_topology()
-    print("正在绘制图形...")
-    self.draw()  # 关键修复：绘制图形
-    print("\nGUI界面已启动！")
-    print("=" * 60)
-    plt.show()
+```javascript
+// 主要函数结构
+app.js
+├── resizeCanvas()              // 调整Canvas尺寸
+├── fetchTopology()             // 获取拓扑数据
+├── calculateNodePositions()    // 计算节点位置
+├── draw()                      // 主绘制函数
+│   ├── drawLinks()            // 绘制链路
+│   ├── drawNodes()            // 绘制节点
+│   └── drawConnectivityIndicators() // 绘制连通性指示器
+├── startAnimationLoop()        // 动画循环
+├── updateConnectivityPanel()   // 更新连通性面板
+├── updateInfoPanel()           // 更新信息面板
+└── 事件处理器
+    ├── canvas click           // 点击选择
+    └── button clicks          // 按钮操作
 ```
 
-## 测试警告说明
+### 交互式操作
 
-运行测试时可能会遇到以下警告，但不影响功能：
+- **点击选择**：点击节点或链路进行选择（黄色高亮）
+- **控制按钮**：
+  - **Link Control**: DN (Down), UP (Up), TG (Toggle)
+  - **Node Control**: FL (Fail), RC (Recover)
+  - **System**: RST (Reset)
+  - **Auto Demo**: DEMO (自动演示)
 
-### 1. urllib3 SSL版本警告
+### 自动演示场景
 
-```
-NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+
-```
+点击 **DEMO** 按钮启动自动演示：
 
-- **原因**：macOS系统使用LibreSSL而非OpenSSL
-- **影响**：⚠️ 不影响功能
-- **解决方案**：可忽略或升级OpenSSL
-
-### 2. 中文字体缺失警告
-
-```
-UserWarning: Glyph ... missing from font(s) DejaVu Sans Mono
-```
-- **原因**：matplotlib默认字体不支持中文（现已替换为英文）
-- **影响**：⚠️ 不影响功能
-- **解决方案**：已将GUI界面中的所有中文替换为英文
-
-### 3. Tkinter弃用警告
-
-```
-DEPRECATION WARNING: The system version of Tk is deprecated
-```
-
-- **原因**：macOS系统Tkinter版本较旧
-- **影响**：⚠️ 不影响功能
-- **解决方案**：设置环境变量 `export TK_SILENCE_DEPRECATION=1`
+1. **Step 1**: 初始状态 - 所有节点和链路正常
+2. **Step 2**: 链路故障 - Node1-Node2链路DOWN
+3. **Step 3**: 节点故障 - Node3失败
+4. **Step 4**: 观察网络状态 - 剩余节点保持连通
+5. **Step 5**: 恢复Node3
+6. **Step 6**: 恢复Node1-Node2链路
+7. **Step 7**: 最终状态 - 网络恢复最优状态
 
 ## 调试工具
 
@@ -351,7 +433,7 @@ GET http://localhost:5002/api/debug/status
     "spanning_tree_links": 3
   },
   "root_node": {
-    "node_id": "abc12345",
+    "node_id": "node_1",
     "node_name": "Node1"
   },
   "stp": { ... },
@@ -362,26 +444,26 @@ GET http://localhost:5002/api/debug/status
 #### 2. 节点详细信息
 
 ```
-GET http://localhost:5002/api/debug/nodes/{node_id}
+GET http://localhost:5002/api/debug/nodes/node_1
 ```
 
 返回示例：
 ```json
 {
   "node": {
-    "node_id": "abc12345",
+    "node_id": "node_1",
     "node_name": "Node1",
     "state": "ACTIVE",
     "is_root": true
   },
   "ports": {
-    "1": {"port_id": 1, "state": "FORWARDING", "node_id": "abc12345"},
-    "2": {"port_id": 2, "state": "FORWARDING", "node_id": "abc12345"},
-    "3": {"port_id": 3, "state": "BLOCKING", "node_id": "abc12345"}
+    "1": {"port_id": 1, "state": "FORWARDING", "node_id": "node_1"},
+    "2": {"port_id": 2, "state": "FORWARDING", "node_id": "node_1"},
+    "3": {"port_id": 3, "state": "BLOCKING", "node_id": "node_1"}
   },
   "connected_links": [
     {
-      "link_id": "abc12345-1<->def67890-1",
+      "link_id": "node_1-1<->node_2-1",
       "state": "UP",
       "connected_to": "Node2",
       "bandwidth": 1000,
@@ -398,26 +480,26 @@ GET http://localhost:5002/api/debug/nodes/{node_id}
 #### 3. 链路详细信息
 
 ```
-GET http://localhost:5002/api/debug/links/{link_id}
+GET http://localhost:5002/api/debug/links/node_1-1<->node_2-1
 ```
 
 返回示例：
 ```json
 {
   "link": {
-    "link_id": "abc12345-1<->def67890-1",
+    "link_id": "node_1-1<->node_2-1",
     "state": "UP",
     "bandwidth": 1000,
     "latency": 1
   },
   "endpoints": {
     "node1": {
-      "node_id": "abc12345",
+      "node_id": "node_1",
       "node_name": "Node1",
       "port_id": 1
     },
     "node2": {
-      "node_id": "def67890",
+      "node_id": "node_2",
       "node_name": "Node2",
       "port_id": 1
     }
@@ -456,35 +538,18 @@ GET http://localhost:5002/api/debug/logs
 }
 ```
 
-### GUI调试工具（debug_gui.py）
-
-用于诊断GUI显示问题的调试脚本，包括：
-- matplotlib backend检查
-- API连接测试
-- 拓扑数据获取测试
-- 网络图绘制测试
-
-### GUI离线测试（test_gui_offline.py）
-
-用于离线测试GUI功能的脚本，包括：
-- GUI实例创建测试
-- GUI初始化测试
-- API连接测试
-- 图形绘制测试
-- 图形保存测试
-
 ## 技术栈
 
 ### 后端
 - Python 3.9+
 - Flask 3.1.2+
-- networkx 2.8.0+
+- Flask-CORS（跨域支持）
 
 ### 前端
-- Python 3.9+
-- matplotlib 3.5.0+
-- networkx 2.8.0+
-- Tkinter (TkAgg backend)
+- HTML5
+- CSS3
+- JavaScript (ES6+)
+- HTML5 Canvas API
 
 ### 测试
 - pytest 8.4.2+
@@ -496,24 +561,33 @@ GET http://localhost:5002/api/debug/logs
 
 1. 在 `backend/api/app.py` 中添加路由
 2. 实现业务逻辑
-3. 在 `frontend/gui/client.py` 中添加客户端方法
-4. 在 `backend/tests/test_api.py` 中添加测试用例
+3. 在 `backend/tests/test_api.py` 中添加测试用例
 
 ### 添加新的测试场景
 
 1. 在 `backend/api/app.py` 的 `run_scenario` 中添加场景逻辑
-2. 在 `frontend/gui/client.py` 中添加场景调用方法
-3. 在 `frontend/tests/test_client.py` 中添加测试用例
+2. 在 `frontend/web/app.js` 中添加场景调用方法
 
-### 添加新的GUI组件
+### 修改前端布局
 
-1. 在 `frontend/gui/main.py` 中实现组件
-2. 在 `frontend/tests/test_gui.py` 中添加测试用例
+1. 编辑 `frontend/web/index.html` 修改页面结构
+2. 编辑 `frontend/web/style.css` 修改样式
+3. 编辑 `frontend/web/app.js` 修改交互逻辑
 
 ## 版本信息
 
 - Python版本：3.9+
 - Flask版本：3.1.2+
 - pytest版本：8.4.2+
-- matplotlib版本：3.5.0+
-- networkx版本：2.8.0+
+
+## 更新日志
+
+### v2.0.0 (最新)
+- ✅ 重构为浏览器前端架构
+- ✅ 使用HTML5 Canvas替代matplotlib
+- ✅ 实现2x2网格布局
+- ✅ 添加连通性检测功能（BFS算法）
+- ✅ 添加连通性可视化指示器
+- ✅ 实现自动演示场景
+- ✅ 节点ID改为增量格式（node_1, node_2...）
+- ✅ 移除Python GUI依赖

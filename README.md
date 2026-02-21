@@ -63,7 +63,7 @@
 ## 项目结构
 
 ```
-solo_cpc/
+tinyrstp/
 ├── backend/                    # 后端服务
 │   ├── core/                 # 核心业务逻辑
 │   │   ├── node.py           # 节点类（增量ID: node_1, node_2...）
@@ -86,7 +86,7 @@ solo_cpc/
 │       ├── index.html       # 主页面（2x2网格布局）
 │       ├── style.css        # 样式表
 │       ├── app.js           # 应用逻辑（Canvas渲染）
-│       └── server.py        # 静态文件服务器（可选）
+│       └── server.py        # 静态文件服务器（推荐使用）
 │
 ├── requirements.txt           # 依赖包
 ├── ARCHITECTURE.md          # 架构设计文档
@@ -106,6 +106,14 @@ pip3 install pytest
 
 ## 运行方式
 
+### 重要提示
+
+确保先进入项目根目录（包含 README.md 和 requirements.txt 的目录）：
+
+```bash
+cd /path/to/tinyrstp/tinyrstp
+```
+
 ### 后端服务
 
 ```bash
@@ -117,9 +125,16 @@ python3 main.py
 
 ### 前端应用
 
-#### 方式一：直接打开HTML文件
+#### 推荐方式：使用项目自带的CORS服务器
 
-在浏览器中直接打开 `frontend/web/index.html` 文件。
+```bash
+cd frontend/web
+python3 server.py
+```
+
+然后在浏览器中访问：**http://localhost:8080**
+
+此方式支持CORS，推荐使用。
 
 #### 方式二：使用Python简易服务器
 
@@ -130,14 +145,28 @@ python3 -m http.server 8080
 
 然后在浏览器中访问：**http://localhost:8080**
 
-#### 方式三：使用Flask静态文件服务器
+#### 方式三：直接打开HTML文件
 
-```bash
-cd frontend/web
-python3 server.py
-```
+在浏览器中直接打开 `frontend/web/index.html` 文件。
 
-然后在浏览器中访问：**http://localhost:8080**
+**注意**：直接打开HTML文件可能会遇到CORS跨域问题，建议使用前两种方式。
+
+### 完整启动流程
+
+1. **启动后端服务**（终端1）：
+   ```bash
+   cd /path/to/tinyrstp/tinyrstp/backend
+   python3 main.py
+   ```
+
+2. **启动前端服务**（终端2）：
+   ```bash
+   cd /path/to/tinyrstp/tinyrstp/frontend/web
+   python3 server.py
+   ```
+
+3. **访问应用**：
+   在浏览器中打开：**http://localhost:8080**
 
 ## API接口
 
